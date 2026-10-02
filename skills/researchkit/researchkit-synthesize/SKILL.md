@@ -127,7 +127,7 @@ Barbara Minto のピラミッド原則（『The Pyramid Principle』）に沿っ
 - `docs/concept/backlog.md` に足した次の問い
 - `studies/999-research-report/tasks.md` の `- [x]`
 
-次の工程は `researchkit-publish`（999 の Q9。読み手に合わせた形式）である。チェックポイントは呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で呼ばれたときはチェックポイントを記録せず、通常のコミットにしてよいかを確かめる。
+次の工程は `researchkit-publish`（999 の Q9。読み手に合わせた形式）である。チェックポイントは呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で実行したときは、最後に `$HELPER checkpoint 999-research-report Q8 "<『ステップ番号』の節の subject>"` を記録する（`researchkit-worktree`）。
 
 ## 7. 完了報告
 

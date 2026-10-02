@@ -54,7 +54,7 @@
 
 ## 3. 引用の規則
 
-- **K-3-1 MUST** 引用は原文のまま「」かブロック引用で示し、出典 ID と頁・節・表の番号を付ける。原文を `studies/<NNN>/evidence/` に残す。
+- **K-3-1 MUST** 引用は原文のまま「」かブロック引用で示し、出典 ID と頁・節・表の番号を付ける。原文を `studies/<NNN-name>/evidence/` に残す。
 - **K-3-2 MUST** 外国語の資料から引くときは、原文を引用し、その後に日本語の訳を添える。訳であることと訳した者（例: 「（訳: AI、確認: 人）」）を書く（`.kiro/steering/language.md`）。公開用の形式で原文を省くときも、原文を `evidence/` に残す。
 - **K-3-3 MUST** 要約と引用を区別する。要約は引用の記号で囲まない。要約でも出典 ID を付ける。
 - **K-3-4 MUST** 引用は必要な範囲に限り、本文が主、引用が従になるようにし、引用の部分を区別し、出所を明示する（著作権法第 32 条の引用の考え方）。図表の転載、長い引用、公開する報告書での引用で迷うものは `[人]` の確認にする。
@@ -106,7 +106,7 @@
 | 2 | `docs/quality.md` | 品質基準（最低の水準） |
 | 3 | `docs/method.md` | 手法と分析環境 |
 | 4 | `docs/glossary.md` | 用語の定義 |
-| 5 | `studies/<NNN>/spec.md`、`plan.md` | RQ ごとの仕様と計画 |
+| 5 | `studies/<NNN-name>/spec.md`、`plan.md` | RQ ごとの仕様と計画 |
 
 - **K-8-1 MUST** すべての RQ は `docs/quality.md` の品質基準を満たす。`researchkit-analyze` と `researchkit-review` で確かめる。
 

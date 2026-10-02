@@ -34,7 +34,8 @@ MANAGED_PREFIXES = (
 )
 MANAGED_FILES = ("CLAUDE.md", "AGENTS.md", "GEMINI.md", "opencode.json")
 # scaffold のパス -> プロジェクトでのパス（置き場所が違うもの）。ライセンス表示は調査のライセンスと混ぜないよう .researchkit/ に置く
-PATH_MAP = {"THIRD_PARTY_NOTICES.md": ".researchkit/THIRD_PARTY_NOTICES.md"}
+# scaffold とプロジェクトでパスが異なるファイル（いまはない）
+PATH_MAP: "dict[str, str]" = {}
 STATE_FILE = ".researchkit/scaffold.json"   # 取り込んだ scaffold の版
 MAIN_BRANCH_ENV = "RESEARCHKIT_MAIN_BRANCH"
 NEW_VERSIONS_DIR = ".scaffold-new"

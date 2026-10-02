@@ -8,7 +8,7 @@
 1. 着手する RQ のファイルを読む
 2. `researchkit-question` / `researchkit-all` に番号を渡す（例: `/researchkit-all 001`）。このファイルが Q2（`researchkit-specify`）の入力になる
 3. 状態は、`researchkit-worktree` が自動で更新する（設計の工程の後は `設計済み`、実行の工程の後は `完了`。`[人]` のタスクが残っていれば `人の作業待ち`）。人のタスクを片付けた後は `researchkit-worktree` の `sync-status` で `完了` にする。手で直すときは、ファイルの状態と下の一覧表の状態欄を同時に直す
-4. **以降その RQ の正本は `studies/<NNN-slug>/`。** このファイルは追記せず、素材・履歴として残す
+4. **以降その RQ の正本は `studies/<NNN-slug>/`。** このファイルは追記せず、素材・履歴として残す（例外: `researchkit-findings` の逆流で、末尾の `## 上流からの変更` の節に追記する）
 
 ## 運用ルール
 

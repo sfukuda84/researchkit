@@ -1,7 +1,7 @@
 # レビュー <round> 回目: <NNN-name または対象の名前>
 
 - **日付**: <YYYY-MM-DD>
-- **対象**: <studies/<NNN>/findings.md と根拠（evidence/、analysis/、sources/ の N 件） / reports/report.md / パス>
+- **対象**: <studies/<NNN-name>/findings.md と根拠（evidence/、analysis/、sources/ の N 件） / reports/report.md / パス>
 - **審査の方法**: <サブエージェントによる独立審査（軸ごと） / 親による順次審査>
 - **軸**: <Source, Logic, Counter, Bias, Numbers（, Ethics）>
 - **機械検証**: check.py errors=<n> warnings=<n>（--online <あり / なし>） / numbers.py errors=<n> warnings=<n>

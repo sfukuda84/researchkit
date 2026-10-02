@@ -52,7 +52,7 @@ $ARGUMENTS
 | `.researchkit/config.yaml` | `sources.min_grade`、`numbers.tolerance` |
 | `.researchkit/memory/constitution.md` | `docs/quality.md` を参照する条項がなければ、`researchkit-constitution` の改訂の手順で足す |
 
-終わったら、`researchkit-bootstrap` の記録の形で R11 を記録する（`docs(bootstrap): R11 品質基準と統合報告を定義`、trailer `Researchkit-Bootstrap: R11`）。単独で実行したときも記録する。更新モードで直しただけのときは、`docs(quality): <変更の要約>` の通常のコミットにする。
+終わったら、`researchkit-bootstrap` の記録の形で R11 を記録する（`docs(bootstrap): R11 品質基準と最終成果物を定義`、trailer `Researchkit-Bootstrap: R11`）。単独で実行したときも記録する。更新モードで直しただけのときは、`docs(quality): <変更の要約>` の通常のコミットにする。
 
 `docs/quality.md` か `999-*` がすでにある場合は、**更新モード**として §4 に従う。**`docs/questions/` にすでに `999-*` がある場合**は、新しく作らず、その名前のまま使う。以下の `999-research-report` は、その名前に読み替える。`999-*` が複数あるときは、どれを統合報告にするかをユーザーに確かめる（自動モードでは止まる）。
 
@@ -170,4 +170,4 @@ $CHECK --all
 - `config.yaml` の `sources.min_grade` と `numbers.tolerance` を、品質基準と食い違ったままにすること
 - 公開の判断を AI が行うこと
 - ユーザーの合意なしに書き出す、または上書きすること（自動モードを除く）
-- 状態が `設計済み` 以降の RQ のファイルを書き換えること、既存の `999-*` を消す・名前を変えること
+- 状態が `設計済み` 以降の RQ のファイルを書き換えること（例外: `researchkit-findings` の逆流で、ファイルの末尾の `## 上流からの変更` の節に追記することだけは許す）、既存の `999-*` を消す・名前を変えること

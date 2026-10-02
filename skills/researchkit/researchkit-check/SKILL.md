@@ -2,7 +2,7 @@
 name: "researchkit-check"
 description: "調査の成果物を機械で検証するスキル。同梱の check.py で、主張の表（findings.md、統合報告 reports/report.md、任意の文書）の根拠の欄の出典 ID・主張 ID が実在するか、根拠が最低等級（sources.min_grade）を満たすか、確度が憲章の段階（confidence.levels）にあるか、出典台帳（sources/）の必須項目・ID・DOI の書式・参照日・使われていない出典・used_in の食い違いを検査し、--online で URL と DOI の到達性も確かめる。numbers.py で、本文の数値と分析の出力（JSON）を {N:<path>#<key>} の参照で突き合わせる。ERROR が 0 件になるまで直す。RQ の工程の Q8・Q10〜Q12、調査全体の工程の R12、統合報告の検証から使われる。「出典をチェックして」「数値を突き合わせて」「根拠の参照を検証して」「報告書を機械でチェックして」と言われたとき、または /researchkit-check と打たれたときに使う。"
 argument-hint: "[--rq <NNN> | --all | --file <path>] [--online] [--strict] [--numbers-only | --sources-only]"
-compatibility: "Requires Python 3.9+. Uses .researchkit/config.yaml, sources/, studies/<NNN>/findings.md, reports/report.md"
+compatibility: "Requires Python 3.9+. Uses .researchkit/config.yaml, sources/, studies/<NNN-name>/findings.md, reports/report.md"
 user-invocable: true
 disable-model-invocation: false
 ---

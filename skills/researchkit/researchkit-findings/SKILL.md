@@ -2,7 +2,7 @@
 name: "researchkit-findings"
 description: "RQ の分析の結果から、主張・根拠・確度・反証を findings.md にまとめるスキル。主張を steering の書式の表（ID・主張・根拠・確度・反証・限界）で書き、憲章の段階で確度を付け、仮説ごとに反証条件と照合して支持・棄却・保留を判定し、残った問いを書く。結論で崩れた前提や仮説を hypotheses.md・issue-tree.md・docs/questions/ に戻して直し（逆流）、spec・plan・tasks と成果物のずれを tasks.md の収束のタスクにして片付ける（speckit-converge に当たる）。check.py --rq と numbers.py --rq のエラーを 0 件にする。999-research-report では統合モードとして、報告書の結論と各 RQ の findings.md の整合を確かめる。RQ の工程の Q10。「主張をまとめて」「findings を書いて」「仮説を判定して」「結論を整理して」と言われたとき、または /researchkit-findings と打たれたときに使う。"
 argument-hint: "<RQ（例: 001, 001-market-size, 999）> [--auto]"
-compatibility: "Requires git and Python 3.9+; uses studies/<NNN>/analysis/, evidence/, sources/, docs/study/; runs researchkit-check scripts (check.py, numbers.py)"
+compatibility: "Requires git and Python 3.9+; uses studies/<NNN-name>/analysis/, evidence/, sources/, docs/study/; runs researchkit-check scripts (check.py, numbers.py)"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -37,11 +37,11 @@ $ARGUMENTS
 
 | 入力 | 用途 |
 |---|---|
-| `studies/<NNN>/spec.md` | 問い、つながる決定、答えの形、判定の基準、範囲外 |
-| `studies/<NNN>/plan.md` | 分析の計画、反証条件、計画の変更 |
-| `studies/<NNN>/tasks.md` | 残作業の照合 |
-| `studies/<NNN>/analysis/`（`analysis.md`、表、`out/*.json`） | 分析の結果、反証条件の照合の材料 |
-| `studies/<NNN>/evidence/`、`search-log.md`、`sources/` | 根拠、探した範囲 |
+| `studies/<NNN-name>/spec.md` | 問い、つながる決定、答えの形、判定の基準、範囲外 |
+| `studies/<NNN-name>/plan.md` | 分析の計画、反証条件、計画の変更 |
+| `studies/<NNN-name>/tasks.md` | 残作業の照合 |
+| `studies/<NNN-name>/analysis/`（`analysis.md`、表、`out/*.json`） | 分析の結果、反証条件の照合の材料 |
+| `studies/<NNN-name>/evidence/`、`search-log.md`、`sources/` | 根拠、探した範囲 |
 | `docs/study/hypotheses.md`、`issue-tree.md` | 仮説と反証条件、イシューツリー |
 | `docs/questions/`、`docs/concept/seed.md`、`premises.md` | 逆流の行き先、決定（`D1`〜） |
 | 憲章、`docs/quality.md`、`config.yaml` の `confidence.levels`・`sources.min_grade` | 確度の段階と付け方、最低等級 |
@@ -110,7 +110,7 @@ $ARGUMENTS
 
 | 行き先 | 戻すこと |
 |---|---|
-| `docs/study/hypotheses.md` | 仮説の「状態」（一覧と詳細の両方）を `支持`／`棄却`／`保留` にし、根拠（`studies/<NNN>/findings.md` の主張の ID）を書く。「変更の記録」に行を足す。ID は振り直さず、棄却した仮説も消さない（取り下げはユーザーが決める）。新しい仮説を立てたら、新しい ID と反証条件で足し、状態を `未検証`、「事後に立てた仮説で、まだ検証していない」と書く |
+| `docs/study/hypotheses.md` | 仮説の「状態」（一覧と詳細の両方）を `支持`／`棄却`／`保留` にし、根拠（`studies/<NNN-name>/findings.md` の主張の ID）を書く。「変更の記録」に行を足す。ID は振り直さず、棄却した仮説も消さない（取り下げはユーザーが決める）。新しい仮説を立てたら、新しい ID と反証条件で足し、状態を `未検証`、「事後に立てた仮説で、まだ検証していない」と書く |
 | `docs/study/issue-tree.md` | 答えが出た節、新しく分かれた節、意味がなくなった節（消さずに印を付ける） |
 | `docs/questions/<NNN>.md`（ほかの RQ） | この結論に依存する RQ（`**依存**` にこの RQ があるもの、同じ仮説につながるもの）への影響。未着手の RQ は、問い・つながる仮説・想定する情報源を直してよい。着手済みの RQ は書き換えず、ファイルの末尾に `## 上流からの変更` の節を足し、`- YYYY-MM-DD <NNN>-C<n>: <変わった事実>。<その RQ で確かめること>` と書く |
 | `docs/glossary.md` | 分析で定義を詰めた用語 |
@@ -152,7 +152,7 @@ Q8（`researchkit-synthesize`）が書いた `reports/report.md` の結論と、
 2. **整合の表**: 結論ごとに、次を確かめて表にする（様式の「整合の表」）。
    - 参照した `<NNN>-C<n>` が存在し、その主張の中身と結論の文が合っている（言い過ぎていない、範囲を広げていない）
    - 結論の確度が、§4 の上限（欠けると結論が成り立たない主張の最も低い確度）を超えていない
-   - 数値が、元の主張と同じ値で、同じ出力ファイルを参照している（`{N:studies/<NNN>/analysis/out/...}`）
+   - 数値が、元の主張と同じ値で、同じ出力ファイルを参照している（報告書では `{N:studies/<NNN-name>/analysis/out/...}`、`findings.md` では `{N:../<NNN-name>/analysis/out/...}`）
    - 元の主張の反証・限界が、報告書の限界に引き継がれている
    - 報告書に、どの主張にもつながらない事実の文がない（新しい事実を足していない）
 3. **RQ どうしの食い違い**: 主張が互いに食い違う組を挙げ、報告書が扱っているか（どちらを採るか、限界に書くか）を確かめる。
@@ -171,7 +171,7 @@ Q8（`researchkit-synthesize`）が書いた `reports/report.md` の結論と、
 |---|---|
 | 確度の判断に迷う主張 | 低い方の段階を採り、理由を「確度の理由」に書く |
 | 仮説の判定に迷う | `保留` にする |
-| 逆流（仮説・イシューツリー・未着手の RQ・用語集・ネタ帳） | 行い、`studies/<NNN>/auto-decisions.md` に記録する |
+| 逆流（仮説・イシューツリー・未着手の RQ・用語集・ネタ帳） | 行い、`studies/<NNN-name>/auto-decisions.md` に記録する |
 | 決定・前提が崩れた | 書き換えずに、見直しの優先度「高」で記録して進む |
 | 収束のタスク | 足して実行する。予算の STOP、`[人]` 待ち、同じ原因の失敗が 3 回続いたときは止まる |
 
@@ -182,11 +182,11 @@ Q8（`researchkit-synthesize`）が書いた `reports/report.md` の結論と、
 
 ## 13. 出力
 
-- `studies/<NNN>/findings.md`（様式: [templates/findings.md](./templates/findings.md)）
+- `studies/<NNN-name>/findings.md`（様式: [templates/findings.md](./templates/findings.md)）
 - 逆流した文書（`docs/study/hypotheses.md`、`issue-tree.md`、`docs/questions/`、`docs/glossary.md`、`docs/concept/backlog.md`）
-- `studies/<NNN>/tasks.md` の `## 収束` の節（ずれがあったとき）と、収束のタスクで直した成果物
+- `studies/<NNN-name>/tasks.md` の `## 収束` の節（ずれがあったとき）と、収束のタスクで直した成果物
 
-次の工程は `researchkit-review`（Q11、5 軸レビューの 1 回目）である。チェックポイント（`research(<RQ>): 主張をまとめる`）は呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で呼ばれたときはチェックポイントを記録せず、通常のコミットにしてよいかを確かめる。
+次の工程は `researchkit-review`（Q11、5 軸レビューの 1 回目）である。チェックポイント（`research(<RQ>): 主張をまとめる`）は呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で実行したときは、最後に `$HELPER checkpoint <RQ_NAME> Q10 "<『ステップ番号』の節の subject>"` を記録する（`researchkit-worktree`）。
 
 ## 14. 完了報告
 

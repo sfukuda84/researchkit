@@ -4,7 +4,7 @@
 
 すべての RQ と統合報告が守る最低の水準。各 RQ の `plan.md` はこの文書に従い、`researchkit-analyze`（Q7）と `researchkit-review`（Q11〜Q12）で満たしていることを確かめる。等級と確度の定義、確度の付け方は憲章を正とし、この文書は最低の水準だけを書く。最終成果物の読み手と形式は [docs/questions/999-research-report.md](./questions/999-research-report.md) で扱う。
 
-- **各 RQ**: `studies/<NNN>/findings.md` と、その根拠（出典、分析、検索ログ）
+- **各 RQ**: `studies/<NNN-name>/findings.md` と、その根拠（出典、分析、検索ログ）
 - **統合報告**: `reports/report.md` と、公開用の形式（`reports/publish/`）
 
 `config.yaml` と対応する値:
@@ -21,7 +21,7 @@
 | QS-SR-001 | 主張の根拠に使える最低の等級 | <例: C 以上（D は使わない）> | <同左> | `check.py`（`sources.min_grade`） |
 | QS-SR-002 | 結論に使う主張の根拠の等級 | <例: spec の「答えの形」に答える主張は、A か B を 1 件以上含む> | <例: 要約に載せる結論は、A を 1 件以上含む> | レビュー（Source 軸） |
 | QS-SR-003 | 一次資料へのさかのぼり | <例: 数値と引用は一次資料で確かめる。できないものは「原典未確認」> | <同左> | レビュー（Source 軸） |
-| QS-SR-004 | 実在の確認 | <例: 根拠に使うすべての出典に `verified_by` がある> | <同左> | `check.py`、レビュー（Source 軸） |
+| QS-SR-004 | 実在の確認 | <例: 根拠に使うすべての出典に `verified_by` がある> | <同左> | レビュー（Source 軸） |
 | QS-SR-005 | 参照日の鮮度 | <例: 参照日が 1 年以内。古いものは再確認するか、理由を書く> | <例: 公開の前に、結論の根拠を再確認する> | `check.py`（WARN） |
 
 ## 主張と確度（QS-CL）
@@ -51,7 +51,7 @@
 | ID | 基準 | 各 RQ | 統合報告 | 確かめ方 |
 |---|---|---|---|---|
 | QS-RV-001 | レビューの軸 | <例: Source、Logic、Counter、Bias、Numbers。定性調査かデータ分析を含む RQ は Ethics を足す> | <同左> | レビューの記録 |
-| QS-RV-002 | 合格条件 | <例: 2 回目のレビュー（Q12）で、CRITICAL と HIGH の未解決が 0 件。MEDIUM は直すか理由を書く> | <同左> | `studies/<NNN>/reviews/` |
+| QS-RV-002 | 合格条件 | <例: 2 回目のレビュー（Q12）で、CRITICAL と HIGH の未解決が 0 件。MEDIUM は直すか理由を書く> | <同左> | `studies/<NNN-name>/reviews/` |
 | QS-RV-003 | 機械検証 | <例: `check.py` と `numbers.py` のエラーが 0 件> | <同左> | `$CHECK`、`$NUM` |
 | QS-RV-004 | 人の確認 | <例: なし / 結論に効く RQ は、専門家が確認する（[人]）> | <例: 公開の前に、依頼主が内容を確認する（[人]）> | `tasks.md` の `[人]` |
 

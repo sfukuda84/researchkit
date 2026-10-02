@@ -35,7 +35,7 @@ disable-model-invocation: false
 | `academic`、`学術`、`文献`、`論文`、`literature`、`レビュー`、`先行研究` | `research-academic`（学術研究者） |
 | `data`、`データ`、`統計`、`分析`、`計量`、`因果`、`予測` | `research-data`（データサイエンティスト） |
 | `ux`、`定性`、`インタビュー`、`アンケート`、`ユーザー`、`qualitative`、`観察` | `research-ux`（UX リサーチャー） |
-| `general`、`汎用`、手法が決まっていない・複数にまたがる | 汎用の調査の専門家（下の 2） |
+| `general`、`汎用`、手法が決まっていない・複数にまたがる | `research-analyst`（汎用の調査の専門家。読めなければ下の 2） |
 
 1. `~/.myai/sparring/agents/<エージェント>.md` と、その定義が指す共通規範（`~/.myai/sparring/common-persona/` の下のファイル）があれば読む。フロントマターより下の本文を、この会話での振る舞いの指示として採用する。衝突したら役の側を優先する。ただし、**このスキルの手順（必須項目、記録、自動モード）が優先する**。定義に「文書を書かない」「要約を返さない」とあっても、`premises.md` への記録は行う。
 2. 読めなければ（定義がまだない場合を含む）、その旨を伝えたうえで、汎用の調査の専門家として次の要点で進める。
@@ -95,7 +95,7 @@ disable-model-invocation: false
 ## 4. 出力
 
 - `docs/concept/premises.md`（様式: [templates/premises.md](./templates/premises.md)）
-- `docs/concept/backlog.md`（様式: [templates/backlog.md](./templates/backlog.md)。既存の候補は消さず、状態だけを変える）
+- `docs/concept/backlog.md`（様式: `researchkit-questions` の [templates/backlog.md](../researchkit-questions/templates/backlog.md)。既存の候補は消さず、状態だけを変える）
 
 終わったら `researchkit-bootstrap` §3 の形で `R4` を記録する（単独で実行したときも記録する）。
 

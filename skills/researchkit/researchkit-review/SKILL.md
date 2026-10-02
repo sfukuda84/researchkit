@@ -1,6 +1,6 @@
 ---
 name: "researchkit-review"
-description: "調査の成果物（RQ の findings.md と、その根拠の evidence・analysis・sources、統合報告 reports/report.md、任意の報告書や資料）を 5 つの独立した軸でレビューし、直すスキル。Source（出典の実在、一次資料か、日付、等級、孫引き、引用と原文の一致）、Logic（主張と根拠の飛躍、相関と因果、過度の一般化、答えの形に答えているか）、Counter（反対の証拠と代わりの説明を Web で追加に探す、反証条件に当たる結果の無視）、Bias（確証・選択・生存者バイアス、標本の偏り、スポンサーの利害、検索語の偏り）、Numbers（出力ファイルとの検算、単位・母数・期間・為替・物価、スクリプトの再実行）に、定性調査とデータ分析では Ethics（同意、匿名化、ライセンス、利用規約）を足す。軸ごとに文脈を持たないサブエージェントで独立に審査し、親が裏を取って直す。指摘は重大度・場所・直し方を添えて studies/<NNN>/reviews/review-<n>.md（工程の外は docs/reviews/）に記録する。RQ の工程の Q11・Q12。「レビューして」「この報告書を検証して」「反証を探して」「出典を確かめて」と言われたとき、または /researchkit-review と打たれたときに使う。"
+description: "調査の成果物（RQ の findings.md と、その根拠の evidence・analysis・sources、統合報告 reports/report.md、任意の報告書や資料）を 5 つの独立した軸でレビューし、直すスキル。Source（出典の実在、一次資料か、日付、等級、孫引き、引用と原文の一致）、Logic（主張と根拠の飛躍、相関と因果、過度の一般化、答えの形に答えているか）、Counter（反対の証拠と代わりの説明を Web で追加に探す、反証条件に当たる結果の無視）、Bias（確証・選択・生存者バイアス、標本の偏り、スポンサーの利害、検索語の偏り）、Numbers（出力ファイルとの検算、単位・母数・期間・為替・物価、スクリプトの再実行）に、定性調査とデータ分析では Ethics（同意、匿名化、ライセンス、利用規約）を足す。軸ごとに文脈を持たないサブエージェントで独立に審査し、親が裏を取って直す。指摘は重大度・場所・直し方を添えて studies/<NNN-name>/reviews/review-<n>.md（工程の外は docs/reviews/）に記録する。RQ の工程の Q11・Q12。「レビューして」「この報告書を検証して」「反証を探して」「出典を確かめて」と言われたとき、または /researchkit-review と打たれたときに使う。"
 argument-hint: "対象（例: 001, 999, reports/report.md, パス, または省略で今の RQ）と、任意の --axis source,logic,counter,bias,numbers,ethics と --round 1|2 と --auto"
 compatibility: "Requires git and Python 3.9+; WebSearch/WebFetch for the Source and Counter axes; Agent (subagents) for independent review; runs researchkit-check scripts"
 user-invocable: true
@@ -66,7 +66,7 @@ $ARGUMENTS
 - **突き合わせ**: `$NUM --rq <NNN>`（報告書は `$NUM --file <path>`）の結果。`{N:...}` の付いていない数値がないか。
 - **計算**: `{N:calc}` の計算の表を検算する。割合の合計、増減率、年平均の成長率、単位の換算を確かめる。
 - **単位・母数・期間**: 単位（千・百万・億）、割合とポイントの違い、母数（全体か回答者か）、期間（年度と暦年、時点と期間）、名目と実質（物価の扱い）、為替（どの時点のレートか）。
-- **再実行**: `commands.analysis` で分析のスクリプトをすべて再実行し、`analysis/out/` の JSON が変わらないことを確かめる（`git diff --stat -- studies/<NNN>/analysis/out/` が空）。変わったら、乱数のシード、入力のハッシュ（`data/manifest.md`）、環境の違いを調べる。
+- **再実行**: `commands.analysis` で分析のスクリプトをすべて再実行し、`analysis/out/` の JSON が変わらないことを確かめる（`git diff --stat -- studies/<NNN-name>/analysis/out/` が空）。変わったら、乱数のシード、入力のハッシュ（`data/manifest.md`）、環境の違いを調べる。
 - **原文との一致**: 出典から写した数値が、抜き書きの原文と一致するか（Source 軸と分担する。Numbers は値と単位、Source は引用の文）。
 
 ### 軸 E: Ethics（倫理・権利。定性調査とデータ分析で足す）
@@ -82,7 +82,7 @@ $ARGUMENTS
 
 | 指定 | 対象 | 記録の置き場 |
 |---|---|---|
-| RQ（`001`、`001-market-size`）、または省略（今の worktree の RQ） | `studies/<NNN>/findings.md` を中心に、根拠の `evidence/`、`analysis/`、`search-log.md`、`plan.md`、使った `sources/` | `studies/<NNN>/reviews/review-<round>.md` |
+| RQ（`001`、`001-market-size`）、または省略（今の worktree の RQ） | `studies/<NNN-name>/findings.md` を中心に、根拠の `evidence/`、`analysis/`、`search-log.md`、`plan.md`、使った `sources/` | `studies/<NNN-name>/reviews/review-<round>.md` |
 | `999`、または RQ の工程の中の `reports/report.md` | `reports/report.md`、`reports/publish/`、`studies/999-research-report/findings.md`、報告書が参照する各 RQ の主張 | `studies/999-research-report/reviews/review-<round>.md` |
 | ファイルのパス（工程の外。任意の報告書・資料） | そのファイルと、そこに書かれた出典 | `docs/reviews/<YYYYMMDD>-<対象>.md` |
 
@@ -145,7 +145,7 @@ $ARGUMENTS
 
 ## 6. 自動モード（`--auto`）
 
-RQ の工程から呼ばれたときは、`researchkit-worktree` の自動モードの規則に従い、自動で決めたことを `studies/<NNN>/auto-decisions.md` に記録する。
+RQ の工程から呼ばれたときは、`researchkit-worktree` の自動モードの規則に従い、自動で決めたことを `studies/<NNN-name>/auto-decisions.md` に記録する。
 
 | 場面 | 自動モードでの動作 |
 |---|---|
@@ -159,7 +159,7 @@ RQ の工程から呼ばれたときは、`researchkit-worktree` の自動モー
 
 ## 7. 出力
 
-- `studies/<NNN>/reviews/review-<round>.md`（工程の外は `docs/reviews/<YYYYMMDD>-<対象>.md`。様式: [templates/review.md](./templates/review.md)）
+- `studies/<NNN-name>/reviews/review-<round>.md`（工程の外は `docs/reviews/<YYYYMMDD>-<対象>.md`。様式: [templates/review.md](./templates/review.md)）
 - 修正した成果物（`findings.md`、`evidence/`、`analysis/`、`sources/`、逆流した文書、報告書）
 - `tasks.md` に足した `[人]` のタスク（人の確認へ回したもの）
 

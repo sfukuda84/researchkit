@@ -22,7 +22,7 @@ AI と一緒に調査・分析を進めるためのスキルセット。[my-spec
 
 RQ の工程（researchkit-question → researchkit-execute、通しは researchkit-all）
  Q1 worktree → Q2 specify → Q3・Q4 clarify ×2 → Q5 plan（事前に分析の計画と反証条件）
- → Q6 tasks → Q7 analyze ×2 → Q8 収集 → Q9 分析 → Q10 主張のまとめと逆流
+ → Q6 tasks → Q7-1・Q7-2 analyze ×2 → Q8 収集 → Q9 分析 → Q10 主張のまとめと逆流
  → Q11・Q12 5 軸レビュー ×2 → Q13 マージと引き継ぎ書
 ```
 
@@ -162,12 +162,12 @@ new-researchkit-project ~/research/existing --adopt
 ### 進捗の確認と引き継ぎ
 
 ```bash
-RK=skills/researchkit/researchkit-status/scripts/researchkit.py
-python3 $RK status               # 調査全体の工程と RQ の工程の進捗、出典の件数（等級別）
-python3 $RK handover             # 引き継ぎ書（docs/handover/）
-python3 $RK doctor               # 設定、リンク、フックの診断
-python3 $RK budget --step Q8     # Web 検索の残り（VERDICT: OK / STOP / UNMETERED）
-python3 $RK sources list --unused   # 使われていない出典
+RK_PY=skills/researchkit/researchkit-status/scripts/researchkit.py
+python3 $RK_PY status               # 調査全体の工程と RQ の工程の進捗、出典の件数（等級別）
+python3 $RK_PY handover             # 引き継ぎ書（docs/handover/）
+python3 $RK_PY doctor               # 設定、リンク、フックの診断
+python3 $RK_PY budget --step Q8     # Web 検索の残り（VERDICT: OK / STOP / UNMETERED）
+python3 $RK_PY sources list --unused   # 使われていない出典
 ```
 
 または `/researchkit-status` を実行する。
@@ -175,12 +175,12 @@ python3 $RK sources list --unused   # 使われていない出典
 ### 出典と数値の確認
 
 ```bash
-CHECK=skills/researchkit/researchkit-check/scripts/check.py
-NUM=skills/researchkit/researchkit-check/scripts/numbers.py
-python3 $CHECK --all             # 主張の根拠の出典 ID、出典の必須項目、等級、使われていない出典
-python3 $CHECK --rq 003 --online # RQ 003 だけ。URL と DOI に到達できるかも確かめる
-python3 $NUM --all               # findings.md・報告書の数値と、分析の出力（JSON）の突き合わせ
-python3 $NUM --file reports/report.md
+CHECK_PY=skills/researchkit/researchkit-check/scripts/check.py
+NUM_PY=skills/researchkit/researchkit-check/scripts/numbers.py
+python3 $CHECK_PY --all             # 主張の根拠の出典 ID、出典の必須項目、等級、使われていない出典
+python3 $CHECK_PY --rq 003 --online # RQ 003 だけ。URL と DOI に到達できるかも確かめる
+python3 $NUM_PY --all               # findings.md・報告書の数値と、分析の出力（JSON）の突き合わせ
+python3 $NUM_PY --file reports/report.md
 ```
 
 - `check.py` と `numbers.py` は、1 行 1 件 `ERROR|WARN <ファイル>:<行> <コード> <説明>` と、最後に `SUMMARY: errors=<n> warnings=<n>` を出す。エラーがあれば終了コード 1。
@@ -203,7 +203,7 @@ python3 $NUM --file reports/report.md
 │   ├── researchkit-questions/scripts/  #   validate.py（RQ 一式の検証）
 │   ├── researchkit-check/scripts/      #   check.py（出典）、numbers.py（数値）
 │   ├── researchkit-method/references/  #   desk.md、literature.md、data.md、qualitative.md
-│   └── researchkit-publish/scripts/    #   build_pptx.py（スライド。python-pptx を uv run で使う）
+│   └── researchkit-publish/scripts/    #   build_pptx.py（スライド。python-pptx を uv run で使う）、strip_refs.py（公開用に {N:...} を取り除く）
 ├── docs/dev/CONTRACT.md                # スキルとスクリプトの間の取り決め（scaffold の開発用）
 ├── scripts/
 │   ├── new_project.py                  # プロジェクトを作る・既存の調査に取り込む・リンクを張り直す（--relink）
@@ -241,13 +241,15 @@ reports/                          # report.md（統合報告）、publish/（読
 |---|---|
 | 種（R1） | 問いを意思決定から導く（誰が何を決めるための調査か）、読み手と答えの使い道を先に決める |
 | 地図（R2） | 一次資料と二次資料の区別、KJ 法（川喜田二郎）による事実のまとめ |
-| 仮説（R5） | イシューツリーと MECE（漏れなく重なりなく）、仮説思考（仮の答えを先に置いて検証する）、反証可能性（カール・ポパー）に基づく反証条件 |
-| 予備調査（R6） | パイロット調査（本調査の前に、問いとデータの入手可能性を小さく確かめる） |
+| 問いの立て方（R3） | FINER（Hulley ほか『Designing Clinical Research』）による問いの点検、PICO（Richardson ほか, 1995）による要素の分解 |
+| 仮説（R5） | イシューツリーと MECE、ピラミッド原則（Barbara Minto）、安宅和人『イシューからはじめよ』の良いイシューの条件、仮説ごとの反証条件 |
+| 予備調査（R6） | パイロット調査（本調査の前に、問いとデータの入手可能性を小さく確かめる）、見えた値に合わせて仮説を書き換える HARKing（Kerr, 1998）の回避 |
+| RQ への仕分け（R9） | 情報の価値（Howard, 1966。Hubbard『How to Measure Anything』）で、答えても決定が変わらない問いを除く |
 | 計画（Q5） | 事前登録（分析の計画と反証条件を収集の前に書き、変更は理由とともに記録する） |
-| 文献レビュー | PRISMA 2020（Page ほか、2021）の流れ図の件数、検索式と包含・除外の基準、抽出表、ナラティブ統合と簡易メタ分析 |
+| 文献レビュー | PRISMA 2020（Page ほか、2021）の流れ図の件数、検索式と包含・除外の基準、抽出表、研究の質の評価（RoB 2 など）と確実性の評価（GRADE）、ナラティブ統合と簡易メタ分析 |
 | デスクリサーチ | 公的統計と企業の開示資料を一次資料として優先する、フェルミ推定（前提を表で示す） |
 | データ分析 | 再実行できる分析（スクリプトと出力の分離、データの目録とハッシュ） |
-| 定性調査 | 半構造化インタビュー、同意と匿名化、コーディング、KJ 法、テーマの抽出 |
+| 定性調査 | 半構造化インタビュー、同意と匿名化、コーディング、KJ 法（川喜田二郎）、テーマ分析（Braun と Clarke） |
 | 主張（Q10） | 主張・根拠・確度・反証の表、見つからなかったことの記録 |
 | レビュー（Q11・Q12） | バイアスの点検（確証バイアス、選択バイアス、生存者バイアスなど）、反対の証拠と代わりの説明の探索、数値の検算と再実行 |
 | 統合（999） | ピラミッド構造（バーバラ・ミント）による、結論を先に書く報告 |

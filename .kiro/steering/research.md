@@ -11,11 +11,11 @@ inclusion: always
 1. **出典のない事実を書かない**: 事実・数値・引用には出典 ID（`S<NNN>-<NNNN>`）を付ける。出典には、URL か書誌情報と、参照日と、等級を付ける（`sources/`）。
 2. **AI が挙げた文献・作品・統計は、1 件ずつ実在を確かめる**: 論文は DOI か出版社・データベースのページで、統計は発表元のページで確かめる。確かめられなかったものは等級 `D`（未確認）にし、根拠に使わない。存在しない文献や、著者・年・数値の取り違えが起きやすい。
 3. **問いは意思決定から導く**: 誰が何を決めるための調査かを `docs/concept/seed.md` で決め、すべての RQ をそこにつなぐ。答えても決定が変わらない RQ は作らない。
-4. **仮説と反証条件を先に書く**: 分析の計画（何を見たら仮説を捨てるか）は、収集の前に `studies/<NNN>/plan.md` に書く。収集の後に計画を変えたときは、変えたことと理由を `plan.md` の「計画の変更」に記録する。
+4. **仮説と反証条件を先に書く**: 分析の計画（何を見たら仮説を捨てるか）は、収集の前に `studies/<NNN-name>/plan.md` に書く。収集の後に計画を変えたときは、変えたことと理由を `plan.md` の「計画の変更」に記録する。
 5. **主張には確度を付ける**: 確度は憲章で定めた段階（既定: `確実`／`可能性が高い`／`示唆`／`不明`）で表し、根拠の数と等級から付ける。確度の言葉を本文でぼかさない（「〜と思われる」で済ませない）。
-6. **見つからなかったことも記録する**: 検索式、データベース、期間、件数を検索ログ（`studies/<NNN>/search-log.md`）に残す。見つからないことは、それ自体が結果である。ただし、存在しないことの証明ではない。
+6. **見つからなかったことも記録する**: 検索式、データベース、期間、件数を検索ログ（`studies/<NNN-name>/search-log.md`）に残す。見つからないことは、それ自体が結果である。ただし、存在しないことの証明ではない。
 7. **反対の証拠を探す**: 各 RQ で、仮説に反する証拠と代わりの説明を探す工程（`researchkit-review` の Counter 軸）を省かない。
-8. **数値は再計算できる形で持つ**: 分析は `studies/<NNN>/analysis/` のスクリプトから再実行できるようにする。報告の数値には出力ファイルへの参照（§「数値の参照」）を付け、`numbers.py` で突き合わせる。手で計算した数値は、計算式と入力を表に残す。
+8. **数値は再計算できる形で持つ**: 分析は `studies/<NNN-name>/analysis/` のスクリプトから再実行できるようにする。報告の数値には出力ファイルへの参照（§「数値の参照」）を付け、`numbers.py` で突き合わせる。手で計算した数値は、計算式と入力を表に残す。
 9. **個人と権利を守る**: インタビューとアンケートの同意、個人情報の匿名化、引用の範囲、有料データベースと統計の利用規約を守る。判断に迷うものは `[人]` のタスクにする。法的な判断はしない。
 10. **成果物と結論を同期させる**: 分析で前提や仮説が崩れたら、`findings.md` だけを直さず、`docs/study/hypotheses.md`、`issue-tree.md`、`docs/questions/` にも戻して直す（逆流）。
 11. **曖昧さは推測で埋めない**: 決まっていないことは `[NEEDS CLARIFICATION: ...]` として明示し、質問で解消する。自動モード（`--auto`、`--oneshot`）では、推奨案を明示して採用し、`auto-decisions.md` に記録することで確認に代える。
@@ -56,7 +56,7 @@ inclusion: always
 | Q8 | `researchkit-collect` | `sources/`（出典台帳）、`studies/<NNN-name>/evidence/`（抜き書き）、`data/`、`search-log.md` |
 | Q9 | `researchkit-analysis` | `studies/<NNN-name>/analysis/`（スクリプト、`out/` の出力、抽出表、コーディング表） |
 | Q10 | `researchkit-findings` | `findings.md`（主張 → 根拠 → 確度 → 反証）、逆流（`hypotheses.md` などの更新）、`tasks.md` の残作業 |
-| Q11〜Q12 | `researchkit-review` ×2 | `studies/<NNN-name>/reviews/review-<n>.md`（5 軸。2 回目は 1 回目の修正の確認と別のレンズ） |
+| Q11〜Q12 | `researchkit-review` ×2 | `studies/<NNN-name>/reviews/review-<n>.md`（5 軸。2 回目は 1 回目の修正の確認と別のレンズ）。Counter 軸で見つかった反対の証拠は、`researchkit-collect` の手順で出典に登録してから主張に反映する |
 | Q13 | `researchkit-worktree` | `main` への `--no-ff` マージ、`docs/questions/` の状態の更新、引き継ぎ書 |
 
 - `researchkit-question` は Q1〜Q7-2 と Q13（設計の工程。`--phase design`）、`researchkit-execute` は Q1、Q8〜Q13（実行の工程。`--phase execute`）、`researchkit-all` は Q1〜Q13（`--phase all`）を行う。
@@ -82,6 +82,25 @@ RQ の Q8・Q9 の中身は、`plan.md` で選んだ手法の参照文書（`res
 - `researchkit-review`: 5 軸のレビュー。RQ の工程の外で、任意の報告書や資料のレビューにも使う。
 - `researchkit-check`: 機械検証（出典の参照、出典の必須項目、数値の突き合わせ）。
 
+## 識別子
+
+ID は振り直さない。取り下げたものも消さずに印を付ける。全量は scaffold の `docs/dev/CONTRACT.md` §5 にある。
+
+| 記号 | 意味 | 定義する文書 |
+|---|---|---|
+| `D1`〜 | 決めたいこと（意思決定） | `docs/concept/seed.md` |
+| `RP1`〜`RP12` | 前提 | `docs/concept/premises.md` |
+| `I1`、`I1.2` | イシューツリーの節 | `docs/study/issue-tree.md` |
+| `H1`〜 | 仮説（反証条件つき） | `docs/study/hypotheses.md` |
+| `BL-001`〜 | 問いの候補 | `docs/concept/backlog.md` |
+| `K-1-1`〜 | 憲章の条項 | `.researchkit/memory/constitution.md` |
+| `QS-SR-001`〜 | 品質基準の項目 | `docs/quality.md` |
+| `SQ1`〜、`AC1`〜 | RQ の小問、判定の基準 | `studies/<NNN-name>/spec.md` |
+| `T001`〜 | タスク | `studies/<NNN-name>/tasks.md` |
+| `S001-0001`〜 | 出典 | `sources/` |
+| `C1`〜、`003-C2` | 主張、ほかの RQ の主張の参照 | `studies/<NNN-name>/findings.md` |
+| `AZ1-B1`、`R1-S01` | 整合性の検証の所見、5 軸レビューの所見 | `studies/<NNN-name>/reviews/` |
+
 ## 出典台帳（`sources/`）
 
 - 1 件 1 ファイル（`sources/<ID>.md`）。ID は `S<NNN>-<NNNN>` で、前半は最初にその出典を使った RQ の番号（共通の出典は `S000-`）、後半は RQ の中の連番である。worktree を並行で進めても衝突しない。
@@ -105,7 +124,7 @@ RQ の Q8・Q9 の中身は、`plan.md` で選んだ手法の参照文書（`res
 
 ## 数値の参照
 
-分析の出力から得た数値は、直後に `{N:<path>#<key>}` を付ける。`<path>` は RQ のディレクトリからの相対パス（統合報告では、リポジトリのルートからの相対パス）で、JSON のファイルを指す。`<key>` はドット区切りのキーである。`numbers.py` が、直前の数値と JSON の値を突き合わせる（許容差は `config.yaml` の `numbers.tolerance`）。手で計算した数値は `{N:calc}` を付け、計算式と入力を同じ文書の「計算」の節に表で書く。公開用の文書（`researchkit-publish`）では、参照の記号を取り除く。
+分析の出力から得た数値は、直後に `{N:<path>#<key>}` を付ける。`<path>` は JSON のファイルを指す。`studies/` の下の文書（各 RQ の `findings.md`、`999-research-report` の `findings.md` を含む）では、その RQ のディレクトリからの相対パス（999 からほかの RQ の出力を指すときは `../001-market-size/analysis/out/market.json`）で書く。`reports/` の下の文書では、リポジトリのルートからの相対パス（`studies/001-market-size/analysis/out/market.json`）で書く。`<key>` はドット区切りのキーである。`numbers.py` が、直前の数値と JSON の値を突き合わせる（許容差は `config.yaml` の `numbers.tolerance`）。手で計算した数値は `{N:calc}` を付け、計算式と入力を同じ文書の「計算」の節に表で書く。公開用の文書（`researchkit-publish`）では、参照の記号を取り除く。
 
 ## レビューの 5 軸（`researchkit-review`）
 
@@ -123,7 +142,7 @@ RQ の Q8・Q9 の中身は、`plan.md` で選んだ手法の参照文書（`res
 
 `tasks.md` のタスクは AI が実行するものを基本とし、AI が実行できない、または実行すべきでないタスクにだけ `[人]` を付ける。
 
-- 書式: `- [ ] T001 [P] [人] 〇〇社の決算説明会の資料を入手し、data/raw/ に置く（完了の確かめ方: data/manifest.md に記載があり、ハッシュが一致する）`。`[P]`（並行可）の後、本文の前に印を置く。
+- 書式: `- [ ] T001 [P] [SQ1] [人] 〇〇社の決算説明会の資料を入手し、data/raw/ に置く（完了の確かめ方: data/manifest.md に記載があり、ハッシュが一致する）`。`[P]`（並行可）、`[SQn]`（対象の小問）の後、本文の前に印を置く。
 - `[人]` の対象: インタビューとアンケートの実施、同意の取得、倫理審査、有料の論文・レポート・データベースの入手、社内データの取得とアクセス権の申請、専門家への確認、報告の公開の判断、秘密情報の入力。
 - 人と AI が混ざる作業は、2 つのタスクに分ける。人が入手したものを AI が確かめる場合は、確かめる側を AI のタスクにする。
 - `[人]` のタスクには、末尾に「（完了の確かめ方: …）」を書く。

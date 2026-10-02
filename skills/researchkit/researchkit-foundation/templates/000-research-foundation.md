@@ -44,12 +44,12 @@
   - `data/large/` の保管場所: <例: 共有ドライブの〇〇。[人] が用意する>
 - **分析環境**（`docs/method.md` の「分析環境」）:
   - <例: uv と、ルートの pyproject.toml・uv.lock。pandas、matplotlib>
-  - スクリプトと出力の置き方: `studies/<NNN>/analysis/`、`out/*.json`、`fig/`
+  - スクリプトと出力の置き方: `studies/<NNN-name>/analysis/`、`out/*.json`、`out/fig/`
   - 乱数のシードの扱い
-- **検索ログ**（`studies/<NNN>/search-log.md`）:
+- **検索ログ**（`studies/<NNN-name>/search-log.md`）:
   - 必須の項目（`docs/quality.md` の検索ログの基準）、見つからなかった検索の書き方
   - 文献レビューの PRISMA 2020 の件数 <文献レビューを含まない場合は削除する>
-- **証拠の置き方**（`studies/<NNN>/evidence/`）: 抜き書きの書き方（原文、出典 ID、頁・表、取得日）
+- **証拠の置き方**（`studies/<NNN-name>/evidence/`）: 抜き書きの書き方（原文、出典 ID、頁・表、取得日）
 - **定性調査**（ある場合）: 同意書とインタビューガイドのひな形の置き場所、対象者の記号の振り方、リポジトリの外に置くもの <定性調査を含まない場合は削除する>
 
 ### 含まない

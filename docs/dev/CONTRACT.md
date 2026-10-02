@@ -41,7 +41,7 @@ gamekit の `worktree_helper.py` を移植する。違いだけを書く。
   - design: Q2 Q3 Q4 Q5 Q6 Q7-1 Q7-2
   - execute: Q8 Q9 Q10 Q11 Q12
   - all: 両方
-- 完了の判定: design の完了は Q7-2 のチェックポイントがあること（`main` にマージ済みなら `studies/<NNN>/tasks.md` があること）。execute の完了は Q12 のチェックポイント、または `main` の `studies/<NNN>/findings.md` があり、`tasks.md` の `[人]` 以外がすべて `- [x]` であること。
+- 完了の判定: design の完了は Q7-2 のチェックポイントがあること（`main` にマージ済みなら `studies/<NNN-name>/tasks.md` があること）。execute の完了は Q12 のチェックポイント、または `main` の `studies/<NNN-name>/findings.md` があり、`tasks.md` の `[人]` 以外がすべて `- [x]` であること。
 - 状態欄: `docs/questions/<NNN-name>.md` の `**状態**: <値> |`。値は `未着手`／`設計済み`／`完了`／`人の作業待ち`。`finish` が、design の後は `設計済み`、execute・all の後は `完了` か `人の作業待ち` にする。`docs/questions/README.md` の一覧の状態列も合わせる（gamekit と同じ）。
 - `999-research-report` の前提: `ensure 999-...` は、ほかのすべての RQ（`000` を含む）の状態が `完了` か `人の作業待ち` でなければ、`PRECONDITION: DEPENDENCY_PENDING` で終了コード 3。`next` は、ほかが終わるまで 999 を候補にしない。
 - 前提条件のコード: `ALREADY_DESIGNED`、`ALREADY_EXECUTED`、`EXECUTE_IN_PROGRESS`、`DESIGN_INCOMPLETE`、`DESIGN_MISSING`、`LEFTOVER_CHANGES`、`NOT_ON_MAIN`、`UNCHECKED_TASKS`、`DEPENDENCY_PENDING`。
@@ -98,10 +98,23 @@ gamekit の `worktree_helper.py` を移植する。違いだけを書く。
 | `RP1`〜`RP12` | 前提 | `docs/concept/premises.md` |
 | `I1`、`I1.2` | イシューツリーの節 | `docs/study/issue-tree.md` |
 | `H1`〜 | 仮説（反証条件つき） | `docs/study/hypotheses.md` |
-| `C1`〜 | 主張（RQ の中） | `studies/<NNN>/findings.md` |
+| `SQ1`〜 | 小問（RQ の中） | `studies/<NNN-name>/spec.md` |
+| `AC1`〜 | 判定の基準（RQ の中） | `studies/<NNN-name>/spec.md` |
+| `C1`〜 | 主張（RQ の中） | `studies/<NNN-name>/findings.md` |
 | `<NNN>-C<n>` | 他の RQ の主張の参照 | 統合報告 |
 | `S<NNN>-<NNNN>` | 出典 | `sources/` |
-| `T001`〜 | タスク | `studies/<NNN>/tasks.md` |
+| `T001`〜 | タスク | `studies/<NNN-name>/tasks.md` |
+| `E1`〜 | 抜き書きの項目（出典ごと） | `studies/<NNN-name>/evidence/<出典 ID>.md` |
+| `#1`〜 | 検索ログの行 | `studies/<NNN-name>/search-log.md` |
+| `P01`〜 | インタビュー・アンケートの対象者（実名との対応表はリポジトリの外） | `studies/<NNN-name>/evidence/`、`sources/`（`type: interview`） |
+| `W1`〜 | 予備調査の仮の出典（`wide.md` の中だけで使い、根拠にしない） | `docs/scan/wide.md` |
+| `M1`〜 | 手法の選定の論点 | `docs/method.md` |
+| `K-<節>-<番号>` | 憲章の条項 | `.researchkit/memory/constitution.md` |
+| `QS-<区分>-<NNN>` | 品質基準の項目（区分は `SR`、`CL` など） | `docs/quality.md` |
+| `BL-<NNN>` | 問いの候補 | `docs/concept/backlog.md` |
+| `Q<n>` | 壁打ちの質問と決定（Q-ID） | `docs/concept/premises.md` |
+| `AZ<回>-<観点><n>` | 整合性の検証（Q7）の所見 | `studies/<NNN-name>/reviews/analyze-<回>.md` |
+| `R<回>-<軸><nn>` | 5 軸レビューの所見（軸は `S`、`L`、`C`、`B`、`N`、`E`） | `studies/<NNN-name>/reviews/review-<回>.md` |
 | `{N:<path>#<key>}` | 数値の参照 | steering の「数値の参照」 |
 
 ## 6. `check.py` と `numbers.py`（`researchkit-check/scripts/`）

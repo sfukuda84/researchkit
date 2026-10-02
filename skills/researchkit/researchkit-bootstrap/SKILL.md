@@ -62,7 +62,7 @@ $ARGUMENTS
   git commit --allow-empty -m "<§2 の subject>" -m "Researchkit-Bootstrap: <ステップ>"
   ```
 
-- ステップのスキルを単独で実行したとき（例: `/researchkit-seed`）も、同じ形で記録する。各スキルの「出力」の節にある「R<n> を記録する」は、この形のコミットを指す。
+- ステップのスキルを単独で実行したとき（例: `/researchkit-seed`）も、同じ形で記録する。各スキルの出力と記録を書いた節（「出力」「出力と記録」「引数と入出力」など、スキルによって名前が違う）にある「R<n> を記録する」は、この形のコミットを指す。
 - `.researchkit/usage/` はコミットしない（`git add -A` の前に `.gitignore` にあることを確かめる）。
 - Claude Code のクラウドセッション（環境変数 `CLAUDE_CODE_REMOTE` が `true`）では、コミットのたびに `git push -u origin HEAD` で作業ブランチを push する。push に失敗しても止まらず、失敗したことを完了報告に挙げる。ローカルでは push しない。
 - 開始時に `$RK bootstrap` で完了済みのステップ（`COMPLETED_STEPS`）と次のステップ（`NEXT_STEP`）を調べ、`NEXT_STEP` から再開する。`DONE` なら立ち上げは完了しているので、完了報告の「次の案内」だけを示す。
@@ -132,7 +132,7 @@ $RK budget --step R2   # R6 の前は --step R6
 1. 次の検証を実行し、エラーが 0 件になるまで直す。`python3` がない環境では `python` または `py -3` に読み替える。
 
    ```bash
-   python3 <skills>/researchkit-questions/scripts/validate.py docs/questions
+   python3 <skills>/researchkit-questions/scripts/validate.py docs/questions --require-reserved
    $CHECK --all
    $RK doctor
    ```

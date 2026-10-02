@@ -91,7 +91,7 @@ $ARGUMENTS
 ### Q11: 5 軸レビュー 1 回目と修正
 
 1. **始める前に** `$RK budget --step Q11` を実行する。STOP なら Q11 に入らずに止まる（Q10 までのチェックポイントは記録済み）。
-2. `researchkit-review` の手順で、`findings.md` と根拠（`evidence/`、`analysis/`、`sources/`）を、Source・Logic・Counter・Bias・Numbers の 5 軸でレビューする。定性調査かデータ分析を含む RQ では Ethics を足す。記録は `RQ_DIR/reviews/review-1.md` に書く。可能なら、軸ごとに文脈を持たないサブエージェントで独立に審査し、親が指摘の裏を取ってから採否を決める。
+2. `researchkit-review --round 1` の手順で、`findings.md` と根拠（`evidence/`、`analysis/`、`sources/`）を、Source・Logic・Counter・Bias・Numbers の 5 軸でレビューする。定性調査かデータ分析を含む RQ では Ethics を足す。記録は `RQ_DIR/reviews/review-1.md` に書く。可能なら、軸ごとに文脈を持たないサブエージェントで独立に審査し、親が指摘の裏を取ってから採否を決める。
 3. CRITICAL・HIGH・MEDIUM の指摘を直す。主張を直したら、`$CHECK --rq <NNN>` と `$NUM --rq <NNN>` が通ることを確かめ、逆流が要るものは Q10 と同じく上流の文書も直す。
 4. `checkpoint <RQ_NAME> Q11` を記録する。
 
@@ -99,7 +99,7 @@ $ARGUMENTS
 
 ### Q12: 5 軸レビュー 2 回目と修正
 
-1. Q11 の修正が、別の主張や数値を壊していないか、新しい飛躍がないかを確かめるため、1 回目と違うレンズで `researchkit-review` を実行し、記録を `RQ_DIR/reviews/review-2.md` に書く。
+1. Q11 の修正が、別の主張や数値を壊していないか、新しい飛躍がないかを確かめるため、1 回目と違うレンズで `researchkit-review --round 2` を実行し、記録を `RQ_DIR/reviews/review-2.md` に書く。
 2. 残っている指摘を直し、`$CHECK --rq <NNN>` と `$NUM --rq <NNN>` のエラーを 0 件にする。修正がなくても次へ進む。
 3. `checkpoint <RQ_NAME> Q12` を記録する。
 
@@ -112,7 +112,7 @@ $ARGUMENTS
 | `000-research-foundation` | `researchkit-collect` で、出典台帳（共通の出典 `S000-*`）、用語集 `docs/glossary.md`、データの目録 `data/manifest.md`、分析環境（`commands.analysis`）、検索ログの形式を整える | `researchkit-analysis` で、分析環境が動くことを確かめる（小さなスクリプトを `commands.analysis` で実行し、`out/` に出力が出る） | `researchkit-findings` で、残作業を `tasks.md` にまとめる。**主張は作らない**（`findings.md` は基盤の状態の記録にする） |
 | `999-research-report` | `researchkit-synthesize` で、全 RQ の `findings.md` を統合し、`reports/report.md` を作る | `researchkit-publish` で、読み手に合わせた形式を作る。不要なら、その旨を記録して空のチェックポイントにする | `researchkit-findings` の統合モードで、報告の結論と各 RQ の `findings.md` の整合を確かめ、逆流を行う |
 
-000 では、Q8 の予算の確認は `--step Q8` のままでよい（検索が少なければ残りは多く残る）。999 の数値の参照は、リポジトリのルートからの相対パスで書く（steering の「数値の参照」）。
+000 では、Q8 の予算の確認は `--step Q8` のままでよい（検索が少なければ残りは多く残る）。999 の数値の参照は、`reports/report.md` ではリポジトリのルートからの相対パス、`studies/999-research-report/findings.md` では RQ のディレクトリからの相対パス（`../001-.../analysis/out/...`）で書く（steering の「数値の参照」）。
 
 ## 4. 完了報告
 

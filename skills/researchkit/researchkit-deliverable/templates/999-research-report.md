@@ -15,7 +15,7 @@
 
 ## つながる仮説
 
-- <H1〜: 各 RQ で判定した仮説すべて。統合報告で、支持・棄却・未決着を一覧にする>
+- <H1〜: 各 RQ で判定した仮説すべて。統合報告で、支持・棄却・保留を一覧にする>
 
 ## 答えの形
 
@@ -69,7 +69,7 @@
 
 ## 想定する情報源
 
-- 各 RQ の `studies/<NNN>/findings.md`、`analysis/out/*.json`、`search-log.md`
+- 各 RQ の `studies/<NNN-name>/findings.md`、`analysis/out/*.json`、`search-log.md`
 - `docs/study/hypotheses.md`、`issue-tree.md`
 - `docs/quality.md`、憲章
 - `docs/auto-decisions.md`、各 RQ の `auto-decisions.md`（限界に書くため）

@@ -1,8 +1,8 @@
 ---
 name: "researchkit-collect"
-description: "RQ の tasks.md の収集のタスクを実行し、根拠を集めるスキル。plan.md の手法（desk・literature・data・qualitative）の参照文書に従って検索・取得し、出典を sources/ に 1 件 1 ファイルで登録する（researchkit.py sources next で ID を取り、1 件ずつ実在を確かめ、等級を付ける）。原文の引用と位置を studies/<NNN>/evidence/ に抜き書きし、データは data/raw/ と data/manifest.md（出所・取得日・ライセンス・ハッシュ）に置き、検索式・件数・見つからなかったことを search-log.md に残す。反証条件に当たる証拠も探す。サブエージェントで並行に集めるときは出典 ID の範囲を分ける。[人] のタスク（インタビューの実施、有料資料の入手など）は実行せず、入手したものを確かめる側を担う。RQ の工程の Q8。「収集して」「資料を集めて」「出典を登録して」と言われたとき、または /researchkit-collect と打たれたときに使う。"
+description: "RQ の tasks.md の収集のタスクを実行し、根拠を集めるスキル。plan.md の手法（desk・literature・data・qualitative）の参照文書に従って検索・取得し、出典を sources/ に 1 件 1 ファイルで登録する（researchkit.py sources next で ID を取り、1 件ずつ実在を確かめ、等級を付ける）。原文の引用と位置を studies/<NNN-name>/evidence/ に抜き書きし、データは data/raw/ と data/manifest.md（出所・取得日・ライセンス・ハッシュ）に置き、検索式・件数・見つからなかったことを search-log.md に残す。反証条件に当たる証拠も探す。サブエージェントで並行に集めるときは出典 ID の範囲を分ける。[人] のタスク（インタビューの実施、有料資料の入手など）は実行せず、入手したものを確かめる側を担う。RQ の工程の Q8。「収集して」「資料を集めて」「出典を登録して」と言われたとき、または /researchkit-collect と打たれたときに使う。"
 argument-hint: "<RQ（例: 001, 001-market-size）> [--tasks T003-T010] [--parallel <n>] [--auto]"
-compatibility: "Requires git and Python 3.9+; WebSearch/WebFetch for desk and literature; uses studies/<NNN>/plan.md, tasks.md, .researchkit/config.yaml"
+compatibility: "Requires git and Python 3.9+; WebSearch/WebFetch for desk and literature; uses studies/<NNN-name>/plan.md, tasks.md, .researchkit/config.yaml"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -40,9 +40,9 @@ $ARGUMENTS
 
 | 入力 | 用途 | ない場合 |
 |---|---|---|
-| `studies/<NNN>/tasks.md` | 実行するタスク | 止まって `researchkit-question` を案内する |
-| `studies/<NNN>/plan.md` | 手法、検索式とデータベース、データ源、標本、反証条件、検索数の見積もり | 同上 |
-| `studies/<NNN>/spec.md` | 問い、答えの形、範囲（地域・期間・対象）、範囲外 | 同上 |
+| `studies/<NNN-name>/tasks.md` | 実行するタスク | 止まって `researchkit-question` を案内する |
+| `studies/<NNN-name>/plan.md` | 手法、情報源と検索式、データ、標本、仮説と反証条件、検索数の見積もり | 同上 |
+| `studies/<NNN-name>/spec.md` | 問い、答えの形、範囲（地域・期間・対象）、範囲外 | 同上 |
 | `researchkit-method/references/<手法>.md` | 手法ごとの収集の手順（`plan.md` の手法に対応するもの） | 手法の節がなければ止まる |
 | `.researchkit/memory/constitution.md`、`docs/quality.md` | 出典の等級、最低等級、引用・倫理の規則 | 既定（steering）で進め、完了報告に書く |
 | `docs/questions/000-research-foundation.md` | 出典台帳・検索ログ・データの目録の形式 | steering と下の既定で進める |
@@ -128,7 +128,7 @@ used_in: ["001"]
 
 `url`・`doi`・書誌（`author` と `publisher`）のどれかは必ず埋める。
 
-## 4. 抜き書き（`studies/<NNN>/evidence/`）
+## 4. 抜き書き（`studies/<NNN-name>/evidence/`）
 
 様式は [templates/evidence.md](./templates/evidence.md)。1 つの出典に 1 ファイル（`evidence/<出典 ID>.md`）を作り、項目を `E1`、`E2` と足す。
 
@@ -156,11 +156,11 @@ used_in: ["001"]
 python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" data/raw/<file>
 ```
 
-## 6. 検索ログ（`studies/<NNN>/search-log.md`）
+## 6. 検索ログ（`studies/<NNN-name>/search-log.md`）
 
 様式は `000-research-foundation` で決めた形（既定は `researchkit-foundation` の検索ログの様式。`tasks.md` の準備のタスクで RQ のディレクトリに用意する）に従う。用意されていなければ、その様式で作る。
 
-- 検索した**すべて**の検索式を、1 回の検索（1 つの情報源に 1 つの検索式）につき 1 行で書く。採用がない検索も書く。ヒット件数は、検索先が示す数（「約」を含む）を写す。採用の欄には、登録した出典 ID を書く。
+- 検索した**すべて**の検索式を、1 回の検索（1 つの情報源に 1 つの検索式）につき 1 行で書く。採用がない検索も書く。ヒット件数は、検索先が示す数（「約」を含む）を写す。採用の欄には採用した件数を書き、登録した出典 ID はメモの欄に書く（様式の記入例のとおり）。
 - **反証の検索**（`plan.md` の「反対の証拠の探し方」と反証条件に当たる証拠を探す検索）には、メモに「反証の検索（H<n>）」と書く。Q11 の Counter 軸が、この行を見て足りない検索を判断する。
 - 「**見つからなかったこと**」の節に、探したが見つからなかった事実・資料・データを、調べた範囲（情報源、検索式の行の番号、期間）と一緒に書く。
 - 文献レビューでは、引用をたどった記録と PRISMA 2020 の件数の節も埋める。
@@ -171,7 +171,7 @@ python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read(
 検索の系統（`plan.md` の検索式のまとまり、データ源、手法）が独立しているときは、サブエージェントに分けて並行に集めてよい。分担は steering の「サブエージェントに任せるとき」に従う。
 
 1. **ID の範囲を分ける**: `plan.md` の「出典 ID」の節に並行の割り当てがあれば、それに従う。なければ、親が `$RK sources next <NNN>` で最初の空きを得て、サブエージェントごとに重ならない範囲を割り当て、`plan.md` の同じ節に書く（例: 空きが `S003-0013` なら、A に `0013`〜`0099`、B に `0100`〜`0199`、C に `0200`〜`0299`）。サブエージェントは、範囲の外の ID を使わない。使わなかった番号は欠番でよい。
-2. **渡すもの**: このスキルの SKILL.md と `templates/evidence.md`、担当のタスク ID と検索式、`spec.md`・`plan.md` のパス、ID の範囲、書いてよいファイル（`sources/<範囲の ID>.md`、`evidence/<範囲の ID>.md`、`data/raw/` の担当のファイル、`studies/<NNN>/search-log.d/<担当>.md`）。
+2. **渡すもの**: このスキルの SKILL.md と `templates/evidence.md`、担当のタスク ID と検索式、`spec.md`・`plan.md` のパス、ID の範囲、書いてよいファイル（`sources/<範囲の ID>.md`、`evidence/<範囲の ID>.md`、`data/raw/` の担当のファイル、`studies/<NNN-name>/search-log.d/<担当>.md`）。
 3. **書かせないもの**: `tasks.md`、`search-log.md`、`data/manifest.md`、既存の出典ファイル。これらは親がまとめて書く。既存の出典を使いたいときは、その ID を最終回答で返させる（親が `used_in` に足す）。
 4. **返させるもの**: 登録した出典の一覧、目録に足す行、実在を確かめられなかった候補、手順どおりに進めにくかった点。
 5. **親がまとめる**: 担当ごとの検索ログを `search-log.md` に移して `search-log.d/` を消す。目録の行を `data/manifest.md` に足す。同じ URL・DOI の出典が複数の担当にあれば、小さい ID に寄せ、他方の抜き書きを移し、消した ID を完了報告に書く。
@@ -200,7 +200,7 @@ python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read(
 | 場面 | 自動モードでの動作 |
 |---|---|
 | 検索式の言い換え・追加（`plan.md` の範囲の中） | 行い、`search-log.md` に書く。範囲（地域・期間・対象）を変える追加はしない |
-| 検索式・データ源の変更 | 推奨案を採用し、`plan.md` の「計画の変更」と `studies/<NNN>/auto-decisions.md` に記録する |
+| 検索式・データ源の変更 | 推奨案を採用し、`plan.md` の「計画の変更」と `studies/<NNN-name>/auto-decisions.md` に記録する |
 | 等級の判断に迷う出典 | 低い方の等級にし、`auto-decisions.md` に記録する |
 | 有料・会員限定の資料 | 入手しない。`[人]` のタスクを足す提案を完了報告に書く |
 | `[人]` のタスク | 実行せず、`[x]` にしない（§8） |
@@ -217,13 +217,13 @@ python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read(
 ## 12. 出力
 
 - `sources/<ID>.md`（新規と、`used_in` を足した既存のもの）
-- `studies/<NNN>/evidence/<ID>.md`（様式: [templates/evidence.md](./templates/evidence.md)）
-- `studies/<NNN>/search-log.md`
+- `studies/<NNN-name>/evidence/<ID>.md`（様式: [templates/evidence.md](./templates/evidence.md)）
+- `studies/<NNN-name>/search-log.md`
 - `data/raw/`、`data/manifest.md`（データを取得したとき）
-- `studies/<NNN>/tasks.md`（収集のタスクの `- [x]`）
-- `studies/<NNN>/plan.md` の「計画の変更」（変えたとき）
+- `studies/<NNN-name>/tasks.md`（収集のタスクの `- [x]`）
+- `studies/<NNN-name>/plan.md` の「計画の変更」（変えたとき）
 
-次の工程は `researchkit-analysis`（Q9）である。チェックポイント（`research(<RQ>): 収集`）は呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で呼ばれたときはチェックポイントを記録せず、通常のコミットにしてよいかを確かめる。RQ の工程として続けるときは `researchkit-execute` を案内する。
+次の工程は `researchkit-analysis`（Q9）である。チェックポイント（`research(<RQ>): 収集`）は呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で実行したときは、最後に `$HELPER checkpoint <RQ_NAME> Q8 "<『ステップ番号』の節の subject>"` を記録する（`researchkit-worktree`）。RQ の工程として続けるときは `researchkit-execute` を案内する。
 
 ## 13. 完了報告
 

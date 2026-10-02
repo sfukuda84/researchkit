@@ -101,7 +101,7 @@ PICO（Population 対象、Intervention 介入・要因、Comparison 比較、Ou
 - **対話モード**: AskUserQuestion で案を選んでもらう。推奨案を先頭に `(Recommended)` 付きで置く。「組み合わせる」（例: A の範囲で C の型）も受け付け、組み合わせた案を 1 つにまとめ直して、もう一度確かめる。
 - **自動モード**: 推奨案を採用し、`docs/auto-decisions.md` に記録する。型の選択と範囲は、見直しの優先度を「高」にする。決定への効きが同じなら、期間と費用が小さい案を採る。
 
-選んだ案を `framing.md` の「選択」に書く。選ばなかった案は消さず、`docs/concept/backlog.md` にも要点を残す（後で問いの候補として拾えるように。様式は `researchkit-sparring` の [templates/backlog.md](../researchkit-sparring/templates/backlog.md)）。
+選んだ案を `framing.md` の「選択」に書く。選ばなかった案は消さず、`docs/concept/backlog.md` にも要点を残す（後で問いの候補として拾えるように。様式は `researchkit-questions` の [templates/backlog.md](../researchkit-questions/templates/backlog.md)）。
 
 ## 4. 出力
 

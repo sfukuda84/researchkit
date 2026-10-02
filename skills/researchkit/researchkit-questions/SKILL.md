@@ -42,7 +42,7 @@ $ARGUMENTS
 | `docs/questions/NNN-<slug>.md` | 1 RQ 1 ファイルの概要。様式は [templates/question.md](./templates/question.md)。見出しとヘッダ行は `validate.py` と `researchkit-worktree` が読むので、変えない |
 | `docs/questions/README.md` | RQ の一覧、運用ルール、葉・仮説と RQ の対応（MECE の記録）。様式は [templates/readme.md](./templates/readme.md) |
 | `docs/questions/spec_order.md` | 着手順と段階分け。様式は [templates/spec_order.md](./templates/spec_order.md) |
-| `docs/concept/backlog.md`（作成・追記） | RQ にしなかった候補（候補 / 却下）と RQ 化済みの記録。`researchkit-sparring` が作ったものがあればそれに足す。なければ [templates/backlog.md](./templates/backlog.md) で作る |
+| `docs/concept/backlog.md`（作成・追記） | RQ にしなかった候補（候補 / 却下）と RQ化済みの記録。`researchkit-sparring` が作ったものがあればそれに足す。なければ [templates/backlog.md](./templates/backlog.md) で作る（backlog の様式の正本はこのテンプレートである） |
 | `docs/study/hypotheses.md`（一覧の「確かめる RQ」の列だけ） | 仮説ごとに、確かめる RQ（`NNN-slug`） |
 
 終わったら、`researchkit-bootstrap` の形で R9 を記録する（`git commit --allow-empty -m "docs(bootstrap): R9 問いに仕分け" -m "Researchkit-Bootstrap: R9"`。成果物のコミットに trailer を付けてもよい）。単独で実行したときも記録する。バックログモードでは記録しない（`docs(questions): BL-NNN を RQ にする` などの通常のコミットにする）。
@@ -260,7 +260,7 @@ MECE（Mutually Exclusive, Collectively Exhaustive。Barbara Minto『The Pyramid
 
 - 既存の RQ ファイル、README、`spec_order.md` を読み、上流（`seed.md`、`issue-tree.md`、`hypotheses.md`、`method.md`）の変更点を洗い出す。RQ の工程からの逆流（主張のまとめで仮説が崩れた、など）で呼ばれたときは、その理由を受け取る。
 - 既存の RQ に対する **追加・分割・統合・取り下げ・依存や着手順の変更** の差分案を表で示し、承認されたものだけ反映する。
-- `**状態**` が `設計済み` 以降の RQ ファイルは変更しない（正本は `studies/NNN-slug/`）。分割や統合が要りそうでも、提案にとどめて報告する。取り下げる RQ は、ファイルを消さずに backlog に「却下」として理由を書き、README から外すかをユーザーに確かめる。
+- `**状態**` が `設計済み` 以降の RQ ファイルは変更しない（正本は `studies/NNN-slug/`）（例外: `researchkit-findings` の逆流で、ファイルの末尾の `## 上流からの変更` の節に追記することだけは許す）。分割や統合が要りそうでも、提案にとどめて報告する。取り下げる RQ は、ファイルを消さずに backlog に「却下」として理由を書き、README から外すかをユーザーに確かめる。
 - **既存の番号は振り直さない。**
 
 ## 6. バックログモード（`--backlog`）
@@ -310,6 +310,6 @@ MECE（Mutually Exclusive, Collectively Exhaustive。Barbara Minto『The Pyramid
 - `docs/concept/` のファイルを、`backlog.md` の作成・追記以外で書き換えること。`docs/study/hypotheses.md` を、一覧の「確かめる RQ」の列以外で書き換えること
 - `backlog.md` の既存の候補を消すこと（状態を変えるだけにする）
 - ユーザーの合意なしに RQ ファイルを書き出す、または既存のファイルを上書きすること（自動モードを除く）
-- `設計済み` 以降の RQ ファイルを書き換えること
+- `設計済み` 以降の RQ ファイルを書き換えること（例外: `researchkit-findings` の逆流で、ファイルの末尾の `## 上流からの変更` の節に追記することだけは許す）
 - 既存の RQ の番号を振り直すこと、取り込んだ元の資料を動かす・消すこと
 - 検証スクリプトの本体を出力ファイルに埋め込むこと

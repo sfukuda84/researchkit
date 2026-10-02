@@ -1,6 +1,6 @@
 # 検索ログ — <NNN-name>
 
-**RQ**: <docs/questions/NNN-name.md の問い> | **期間**: <YYYY-MM-DD>〜<YYYY-MM-DD> | **計画**: [plan.md](./plan.md) の「検索式とデータベース」
+**RQ**: <docs/questions/NNN-name.md の問い> | **期間**: <YYYY-MM-DD>〜<YYYY-MM-DD> | **計画**: [plan.md](./plan.md) の「情報源と検索式」
 
 この RQ で行った検索をすべて記録する。**見つからなかった検索も書く**（steering の原則 6）。見つからないことは結果であるが、存在しないことの証明ではない。必須の項目は `docs/quality.md` の検索ログの基準に従う。
 

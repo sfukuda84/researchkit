@@ -53,7 +53,7 @@ $ARGUMENTS
 | [templates/manifest.md](./templates/manifest.md) | `data/manifest.md` | 000 の Q8 |
 | [templates/search-log.md](./templates/search-log.md) | `studies/<NNN-name>/search-log.md` | 各 RQ の Q8 の最初（000 を含む） |
 
-終わったら、`researchkit-bootstrap` の記録の形で R10 を記録する（`docs(bootstrap): R10 共通基盤を定義`、trailer `Researchkit-Bootstrap: R10`）。単独で実行したときも記録する。更新モードで 000 を直しただけのときは、`docs(questions): 000 を更新` の通常のコミットにする。
+終わったら、`researchkit-bootstrap` の記録の形で R10 を記録する（`docs(bootstrap): R10 調査の共通基盤を定義`、trailer `Researchkit-Bootstrap: R10`）。単独で実行したときも記録する。更新モードで 000 を直しただけのときは、`docs(questions): 000 を更新` の通常のコミットにする。
 
 **`docs/questions/` にすでに `000-*` がある場合**は、新しく作らず、その名前のまま**更新モード**（§4）で使う。以下の `000-research-foundation` は、その名前に読み替える。`000-*` が複数あるときは、どれを共通基盤にするかをユーザーに確かめる（自動モードでは止まる）。
 
@@ -68,9 +68,9 @@ $ARGUMENTS
 | 出典台帳 | `sources/` の運用（1 件 1 ファイル、ID の採番 `$RK sources next`、フロントマターの必須項目、`used_in` の更新、並行で集めるときの ID の範囲の分け方、実在の確かめ方と `verified_by` の書き方）、共通の出典（`S000-`。複数の RQ が使う基本の統計・文献・定義の資料）の初期の登録 |
 | 用語集 | `docs/glossary.md` の作成、初期の用語（`docs/scan/wide.md` と各 RQ の問いに出る用語）、表記の統一、英語の対訳（検索語に使う）、用語を足す手順（RQ の Q3〜Q4 で定義した用語を戻す） |
 | データの目録 | `data/manifest.md` の作成、`data/raw/` と `data/large/` の置き場所、加工しない規則、SHA-256 のハッシュ、`data/large/` の保管場所（リポジトリの外）と入手の方法、`.gitignore` |
-| 分析環境 | `docs/method.md` の分析環境の導入（`uv` か R、`pyproject.toml` と `uv.lock`、`renv.lock`）、`commands.analysis` と `commands.test` が動くこと、スクリプトと出力の置き方（`analysis/`、`out/*.json`、`fig/`）、乱数のシード |
+| 分析環境 | `docs/method.md` の分析環境の導入（`uv` か R、`pyproject.toml` と `uv.lock`、`renv.lock`）、`commands.analysis` と `commands.test` が動くこと、スクリプトと出力の置き方（`analysis/`、`out/*.json`、`out/fig/`）、乱数のシード |
 | 検索ログ | `search-log.md` の形式（必須の項目、見つからなかった検索の書き方、文献レビューの PRISMA 2020 の件数、引用をたどった記録） |
-| 証拠の置き方 | `studies/<NNN>/evidence/` の抜き書きの書き方（原文、出典 ID、頁・表、取得日） |
+| 証拠の置き方 | `studies/<NNN-name>/evidence/` の抜き書きの書き方（原文、出典 ID、頁・表、取得日） |
 | 定性調査（ある場合） | 同意書とインタビューガイドのひな形の置き場所、対象者の記号（`P01`）の振り方、対応表と録音をリポジトリの外に置く場所（`[人]`） |
 | 検証 | `$RK doctor`、`$CHECK --all`、`$NUM --all` がエラーなく通ること、Web 検索のフック（`$RK hooks install`）が入っていること |
 
@@ -166,6 +166,6 @@ python3 <skills>/researchkit-questions/scripts/validate.py docs/questions
 - 調査の中身（問いへの答え、仮説の検証、主張）を 000 に入れること
 - 手法や分析環境の選定を 000 に書くこと（`docs/method.md` に従う）
 - ユーザーの合意なしに書き出す、または上書きすること（自動モードを除く）
-- 状態が `設計済み` 以降の RQ のファイルを書き換えること
+- 状態が `設計済み` 以降の RQ のファイルを書き換えること（例外: `researchkit-findings` の逆流で、ファイルの末尾の `## 上流からの変更` の節に追記することだけは許す）
 - 既存の RQ の番号を振り直すこと、既存の `000-*` を消す・名前を変えること
 - このスキルで `docs/glossary.md`、`data/manifest.md`、出典を作ること（000 の Q8 で行う）

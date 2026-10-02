@@ -1,8 +1,8 @@
-# researchkit 設計書（草案）
+# researchkit 設計書
 
 AI と一緒に調査・分析を進めるためのスキルセット。[speckit](../speckit/README.md) の worktree による「単位ごとの工程」を土台に、[novelkit](../novelkit/README.md) の「全体の工程」（種 → 調査 → 方向性 → 壁打ち）、Web 検索の予算、正典を取り入れる。さらに、[gamekit](../gamekit/README.md) の「机上検証」「目標値と突き合わせるスクリプト」「多軸レビュー」を、調査向けに置き換える。
 
-この文書は実装前の設計である。合意した内容を README.md、steering、各スキルに展開する。
+この文書は設計の考え方を残すものである（実装済み）。規則の正本は `.kiro/steering/research.md`、スキルとスクリプトの間の取り決めは `docs/dev/CONTRACT.md` にあり、食い違うときはそちらを正とする。
 
 ## 1. 方針
 
@@ -22,13 +22,13 @@ gamekit-research と novelkit-research の大原則を、調査の全工程に�
 5. **主張には確度を付ける**。憲章で定めた段階（例: 確実／可能性が高い／示唆／不明）で表し、根拠の数と質から付ける。
 6. **見つからなかったことも記録する**。検索式、データベース、期間、件数を検索ログに残す。ただし、見つからないことは存在しないことの証明ではない。
 7. **反対の証拠を探す**。各 RQ で、仮説に反する証拠と代わりの説明を探す工程を省かない。
-8. **数値は再計算できる形で持つ**。分析は `studies/<NNN>/analysis/` のスクリプトから再実行できるようにし、報告の数値は出力ファイルと突き合わせる（gamekit の `balance.py check` に当たる）。
+8. **数値は再計算できる形で持つ**。分析は `studies/<NNN-name>/analysis/` のスクリプトから再実行できるようにし、報告の数値は出力ファイルと突き合わせる（gamekit の `balance.py check` に当たる）。
 9. **個人と権利を守る**。インタビューの同意、個人情報の匿名化、引用の範囲、有料データベースの利用規約を守る。判断に迷うものは `[人]` にする。
 10. **成果物と結論を同期させる**。分析で前提や仮説が崩れたら、`findings.md` だけでなく、`hypotheses.md` と `issue-tree.md` にも戻して直す（novelkit の「逆流」）。
 
 ## 3. 工程
 
-### 3.1 調査全体の工程（`researchkit-bootstrap`、R0〜R11）
+### 3.1 調査全体の工程（`researchkit-bootstrap`、R0〜R12）
 
 | ステップ | スキル | 成果物 | 元 |
 |---|---|---|---|
@@ -42,12 +42,12 @@ gamekit-research と novelkit-research の大原則を、調査の全工程に�
 | R7 | `researchkit-method` | `docs/method.md`（手法の 3 案比較と選択、データ源、分析環境）、`config.yaml` の `commands` | gamekit-architecture |
 | R8 | `researchkit-constitution` | `.researchkit/memory/constitution.md`（出典の等級、確度の段階、引用、数値、倫理、AI 利用の開示） | speckit-constitution、novelkit-constitution |
 | R9 | `researchkit-questions` | `docs/questions/`（`001-*.md` 以降、`README.md`、`spec_order.md`） | concept-2-feature、gamekit-features |
-| R10 | `researchkit-foundation` | `docs/questions/000-research-foundation.md`（出典台帳・用語集・データ辞書・分析環境・検索ログの形式） | speckit-common-feature |
+| R10 | `researchkit-foundation` | `docs/questions/000-research-foundation.md`（出典台帳・用語集・データの目録・分析環境・検索ログの形式） | speckit-common-feature |
 | R11 | `researchkit-deliverable` | `docs/quality.md`（品質基準）、`docs/questions/999-research-report.md`（最終成果物の読み手・形式・構成） | speckit-nfr-feature |
-| R12 | （bootstrap） | 全体の検証（`validate.py`） | 3 キット共通 |
+| R12 | （bootstrap） | 全体の検証（`validate.py --require-reserved`、`check.py --all`、`researchkit.py doctor`） | 3 キット共通 |
 
 - R4 の前提 RP1〜RP12 は、読み手、決めたいこと、範囲（地域・期間・対象）、期限、予算、使えるデータとアクセス、要求する確度、成果物の形式、倫理と個人情報、利害関係（スポンサーの意向など）、言語、既知の制約の 12 項目にする。
-- R6 の予備調査は、検索数件とデータの所在の確認、1〜2 人への試しの質問などで、問いの立て方の誤りを早く見つけるために行う。小さな調査では飛ばせる（`--skip-pilot`）。
+- R6 の予備調査は、検索数件とデータの所在の確認、1〜2 人への試しの質問などで、問いの立て方の誤りを早く見つけるために行う。小さな調査では飛ばせる（`researchkit-bootstrap --skip-pilot`、単独では `researchkit-pilot --skip <理由>`。飛ばしても理由を記録して R6 として記録する）。
 - R12 の後は、novelkit と同じくセッションを区切る（§6）。
 
 ### 3.2 RQ の工程（`researchkit-question` → `researchkit-execute`、通しは `researchkit-all`）
@@ -55,15 +55,15 @@ gamekit-research と novelkit-research の大原則を、調査の全工程に�
 | ステップ | スキル | 成果物 | speckit の対応 |
 |---|---|---|---|
 | Q1 | `researchkit-worktree` | `.worktrees/<NNN-name>` | S1 |
-| Q2 | `researchkit-specify` | `studies/<NNN>/spec.md`（問い、つながる決定、答えの形、判定の基準、範囲外） | S2 |
+| Q2 | `researchkit-specify` | `studies/<NNN-name>/spec.md`（問い、つながる決定、答えの形、判定の基準、範囲外） | S2 |
 | Q3〜Q4 | `researchkit-clarify` ×2 | `spec.md`（2 回目は調査特有の曖昧さ: 用語の定義、母集団、期間、地域、比較の対象、単位） | S3〜S4 |
-| Q5 | `researchkit-plan` | `plan.md`（手法、検索式とデータベース、データ源、標本、分析の計画、反証条件、検索数の見積もり） | S5 |
+| Q5 | `researchkit-plan` | `plan.md`（手法、情報源と検索式、データ、標本、分析の計画、仮説と反証条件、検索数の見積もり） | S5 |
 | Q6 | `researchkit-tasks` | `tasks.md`（`[人]` を含む） | S6 |
-| Q7-1〜2 | `researchkit-analyze` ×2 | spec・plan・憲章・仮説の整合 | S7 |
-| Q8 | `researchkit-collect` | `sources/`（出典台帳）、`studies/<NNN>/evidence/`（抜き書き）、`data/raw/`、検索ログ | S8（前半） |
-| Q9 | `researchkit-analysis` | `studies/<NNN>/analysis/`（スクリプト・出力）、抽出表、コーディング表 | S8（後半） |
+| Q7-1〜Q7-2 | `researchkit-analyze` ×2 | spec・plan・憲章・仮説の整合 | S7 |
+| Q8 | `researchkit-collect` | `sources/`（出典台帳）、`studies/<NNN-name>/evidence/`（抜き書き）、`data/raw/`、検索ログ | S8（前半） |
+| Q9 | `researchkit-analysis` | `studies/<NNN-name>/analysis/`（スクリプト・出力）、抽出表、コーディング表 | S8（後半） |
 | Q10 | `researchkit-findings` | `findings.md`（主張 → 根拠 ID → 確度 → 反証の有無）、逆流（`hypotheses.md` などの更新） | S9 converge |
-| Q11〜Q12 | `researchkit-review` ×2 | `studies/<NNN>/reviews/review-<n>.md`（5 軸） | S10〜S11 |
+| Q11〜Q12 | `researchkit-review` ×2 | `studies/<NNN-name>/reviews/review-<n>.md`（5 軸） | S10〜S11 |
 | Q13 | `researchkit-worktree` | `main` への `--no-ff` マージ、`docs/questions/` の状態の更新、引き継ぎ書 | S12 |
 
 - 仕様工程（Q1〜Q7）だけを行う `researchkit-question` と、実行工程（Q8〜Q13）を行う `researchkit-execute` に分ける。speckit-feature と speckit-coding の分け方と同じである。
@@ -82,10 +82,10 @@ Q8〜Q9 の中身は、`plan.md` で選んだ手法の参照文書に従う。
 
 ### 3.4 統合と公開
 
-`999-research-report` は、全 RQ の完了後に同じ worktree の工程で進める。ただし Q8〜Q10 の代わりに、次の 2 つのスキルを使う。
+`999-research-report` は、全 RQ の完了後に同じ worktree の工程で進める。Q8 は `researchkit-synthesize`、Q9 は `researchkit-publish`（不要なら理由を記録して空のチェックポイント）、Q10 は `researchkit-findings` の統合モード（報告の結論と各 RQ の主張の整合、逆流）である。
 
 - `researchkit-synthesize`: 全 RQ の `findings.md` を、結論を先に書く構成（ピラミッド構造）で統合し、`reports/report.md` を作る。エグゼクティブサマリー、確度つきの結論、限界、次の問いを含める。
-- `researchkit-publish`（任意）: 読み手に合わせた形式にする。スライドは speckit-presentation の `build_pptx.py` を移植し、文書は Markdown か docx にする。数値は `findings.md` と分析の出力にあるものだけを使う。
+- `researchkit-publish`（任意）: 読み手（`executive`／`team`／`external`）に合わせた形式を `reports/publish/<読み手>/` に作る。スライドは speckit-presentation の `build_pptx.py` を移植し、文書は Markdown・HTML か docx にする。公開用の文書からは `strip_refs.py` で `{N:...}` を取り除く。数値は `findings.md` と分析の出力にあるものだけを使う。
 
 ### 3.5 共通
 
@@ -111,13 +111,14 @@ gamekit-review と同じく、軸ごとに文脈を持たないサブエージ�
 
 | スクリプト | 場所 | 内容 | 移植元 |
 |---|---|---|---|
-| `researchkit.py`、`rklib.py` | `researchkit-status/scripts/` | `init`、`status`、`bootstrap`、`handover`、`doctor`、`budget`、`hooks install` | gamekit.py、novelkit.py |
+| `researchkit.py`、`rklib.py` | `researchkit-status/scripts/` | `init`、`config get`、`bootstrap`、`status`、`handover`、`doctor`、`pitfall`、`budget`、`hooks install`、`sources next`、`sources list` | gamekit.py、novelkit.py |
 | `count_search.py` | 同上 | Web 検索の回数を数えるフック | novelkit |
 | `worktree_helper.py` | `researchkit-worktree/scripts/` | worktree、ステップ判定、`status`、`next`、`human-tasks`、`sync-status`、`abort` | gamekit |
 | `validate.py` | `researchkit-questions/scripts/` | RQ 一式の検証（番号、決定とのつながり、spec_order、仮説との対応） | gamekit-features |
 | `check.py` | `researchkit-check/scripts/` | 主張ごとの出典 ID の有無、出典の必須項目（URL か書誌、参照日、等級）、使われていない出典、DOI の書式、`--online` で URL と DOI の到達性 | novelkit-check |
 | `numbers.py` | `researchkit-check/scripts/` | `findings.md`・報告書の数値と、分析の出力（JSON）の突き合わせ | gamekit balance.py |
 | `build_pptx.py` | `researchkit-publish/scripts/` | スライドの生成（python-pptx、`uv run`） | speckit-presentation |
+| `strip_refs.py` | `researchkit-publish/scripts/` | 公開用の文書から `{N:...}`（と主張の参照）を取り除く | — |
 
 ## 6. セッションの区切りと予算
 
@@ -134,13 +135,14 @@ gamekit-review と同じく、軸ごとに文脈を持たないサブエージ�
 
 ```text
 .
-├── README.md、DESIGN.md、LICENSE、THIRD_PARTY_NOTICES.md
+├── README.md、DESIGN.md、LICENSE
+├── docs/dev/CONTRACT.md                # スキルとスクリプトの間の取り決め（新規プロジェクトには持ち込まない）
 ├── CLAUDE.md / AGENTS.md / GEMINI.md / opencode.json
 ├── .kiro/steering/
 │   ├── language.md
 │   └── research.md                     # researchkit の工程とルール
 ├── .claude/skills/ .agents/skills/ .kiro/skills/   # → skills/researchkit/*
-├── skills/researchkit/                 # 約 25 本
+├── skills/researchkit/                 # 29 本
 ├── scripts/new_project.py、new-researchkit-project
 └── tool/                               # new-researchkit-project（作成・取り込み・update）とテスト
 ```
@@ -163,7 +165,7 @@ docs/
 sources/                          # 出典台帳（1 件 1 ファイル、フロントマター）
 data/raw/、data/manifest.md       # 生データと目録（大きいファイルは Git に入れない）
 studies/<NNN-name>/               # spec.md、plan.md、tasks.md、search-log.md、evidence/、analysis/、findings.md、reviews/
-reports/                          # report.md、slides/
+reports/                          # report.md、publish/（読み手ごとの形式）
 ```
 
 ## 8. 決めておきたい点

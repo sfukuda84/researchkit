@@ -2,7 +2,7 @@
 name: "researchkit-analysis"
 description: "RQ の収集した根拠（evidence/、data/、sources/）を、plan.md で事前に決めた分析の計画どおりに分析するスキル。手法ごとに、主張と根拠の表・比較表・推計（デスクリサーチ）、抽出表と研究の質の評価と統合（文献レビュー）、再実行できるスクリプトと前処理の記録（データ分析。commands.analysis で実行し、数値を analysis/out/*.json に出す）、匿名化とコーディング表とテーマ（定性調査）を作る。計画との対応表を作り、計画を変えたときは plan.md の「計画の変更」に、変えたこと・理由・データを見る前か後かを記録する。反証条件の照合の材料もここで揃える。RQ の工程の Q9。「分析して」「抽出表を作って」「コーディングして」「スクリプトを回して」と言われたとき、または /researchkit-analysis と打たれたときに使う。"
 argument-hint: "<RQ（例: 001, 001-market-size）> [--rerun] [--auto]"
-compatibility: "Requires git and Python 3.9+; runs .researchkit/config.yaml commands.analysis (e.g. uv run --with pandas python {script}); uses studies/<NNN>/plan.md, evidence/, data/"
+compatibility: "Requires git and Python 3.9+; runs .researchkit/config.yaml commands.analysis (e.g. uv run --with pandas python {script}); uses studies/<NNN-name>/plan.md, evidence/, data/"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -36,10 +36,10 @@ $ARGUMENTS
 
 | 入力 | 用途 |
 |---|---|
-| `studies/<NNN>/plan.md` | 分析の計画、反証条件、標本、手法 |
-| `studies/<NNN>/spec.md` | 答えの形、判定の基準、範囲 |
-| `studies/<NNN>/tasks.md` | 分析のタスク |
-| `studies/<NNN>/evidence/`、`search-log.md`、`sources/` | 収集した根拠 |
+| `studies/<NNN-name>/plan.md` | 分析の計画、反証条件、標本、手法 |
+| `studies/<NNN-name>/spec.md` | 答えの形、判定の基準、範囲 |
+| `studies/<NNN-name>/tasks.md` | 分析のタスク |
+| `studies/<NNN-name>/evidence/`、`search-log.md`、`sources/` | 収集した根拠 |
 | `data/raw/`、`data/manifest.md` | データ |
 | `researchkit-method/references/<手法>.md` | 手法ごとの分析の手順 |
 | `docs/study/hypotheses.md` | 仮説と反証条件 |
@@ -70,7 +70,7 @@ $ARGUMENTS
 ### 4.1 デスクリサーチ（`desk`）
 
 - **主張と根拠の表**: 主張の候補ごとに、支持する根拠と反する根拠（出典 ID と抜き書きの番号）、根拠の等級、一次資料かを並べる。候補は Q10 で主張（`C1`〜）になる。
-- **比較表**: 競合・技術・制度などを比べるときは、比べる観点を先に決め（`plan.md`）、セルごとに出典 ID を付ける。分からないセルは「不明（ログ L0xx で探した）」と書き、空けない。
+- **比較表**: 競合・技術・制度などを比べるときは、比べる観点を先に決め（`plan.md`）、セルごとに出典 ID を付ける。分からないセルは「不明（search-log.md #n で探した）」と書き、空けない。
 - **推計**（フェルミ推定など）: 前提を表にし、前提ごとに値・出典（または「仮定」と理由）・幅（低・基準・高）を書く。計算はスクリプトにし、幅の組み合わせで結果の幅（感度）も出す。前提の 1 つが結果を大きく動かすなら、その前提を Q10 の限界に書く。
 
 ### 4.2 文献レビュー（`literature`）
@@ -82,12 +82,12 @@ $ARGUMENTS
 
 ### 4.3 データ分析（`data`）
 
-- **スクリプト**: `studies/<NNN>/analysis/<名前>.py`（R なら `.R`）に書き、`commands.analysis` の `{script}` をスクリプトのパスに置き換えて、プロジェクトのルートで実行する。入力は `data/raw/`（または `data/large/`）から読み、元のファイルを書き換えない。
-- **出力**: 数値は `studies/<NNN>/analysis/out/<名前>.json` に書く。キーは英数字と `_` にし、入れ子はドット区切りで参照する（`{N:analysis/out/market.json#size.2025}`）。値は数値にする。割合は 0〜1 か百分率のどちらかにそろえ、キーの名前で分かるようにする（`share`、`share_pct`）。図は `analysis/out/fig/` に置く。
+- **スクリプト**: `studies/<NNN-name>/analysis/<名前>.py`（R なら `.R`）に書き、`commands.analysis` の `{script}` をスクリプトのパスに置き換えて、プロジェクトのルートで実行する。入力は `data/raw/`（または `data/large/`）から読み、元のファイルを書き換えない。
+- **出力**: 数値は `studies/<NNN-name>/analysis/out/<名前>.json` に書く。キーは英数字と `_` にし、入れ子はドット区切りで参照する（`{N:analysis/out/market.json#size.2025}`）。値は数値にする。割合は 0〜1 で持つ（`numbers.py` が 100 倍して `%` と比べる。`docs/method.md` の出力の規約）。単位はキー名か、同じ JSON の `units` に書く。図は `analysis/out/fig/` に置く。
 - **出力の `_meta`**: JSON に `_meta` を置き、スクリプトの名前、入力のファイルと SHA-256、乱数のシードを書く。実行の日時は書かない（同じ入力なら同じ出力になるようにする）。
 - **前処理の記録**: 手順ごとに、行数（前・後）、除いたものと理由、欠損の扱い、変数の作り方を `analysis.md` の表に書く。除外の基準は `plan.md` のとおりにする。
 - **結果の書き方**: p 値だけでなく、効果の大きさと幅（信頼区間など）を出す。多くの比較をしたときは、その数と補正の有無を書く。
-- **再現の確認**: 全部のスクリプトをもう一度実行し、`out/` の JSON が変わらないことを確かめる（`git diff --stat -- studies/<NNN>/analysis/out/` が空）。乱数を使うときは、シードを固定する。`commands.test` があれば、分析のコードのテストも実行する。
+- **再現の確認**: 全部のスクリプトをもう一度実行し、`out/` の JSON が変わらないことを確かめる（`git diff --stat -- studies/<NNN-name>/analysis/out/` が空）。乱数を使うときは、シードを固定する。`commands.test` があれば、分析のコードのテストも実行する。
 - **`commands.analysis` が空**: スクリプトが要る分析なら止まり、`researchkit-method`（分析環境を決める）を案内する。自動モードでも止まる（`docs/method.md` の変更に当たる）。スクリプトの要らない分析（表だけのデスクリサーチなど）なら、`{N:calc}` と計算の表で進めてよい。
 
 ### 4.4 定性調査（`qualitative`）
@@ -119,7 +119,7 @@ $ARGUMENTS
 
 1. 分析のタスクを `- [x]` にする（`[人]` を除く）。
 2. スクリプトがあれば、全部をもう一度実行し、出力が変わらないことを確かめる（§4.3）。
-3. `analysis.md` などに `{N:...}` を書いたら、`$NUM --file studies/<NNN>/analysis/analysis.md` で突き合わせ、ERROR を 0 件にする。
+3. `analysis.md` などに `{N:...}` を書いたら、`$NUM --file studies/<NNN-name>/analysis/analysis.md` で突き合わせ、ERROR を 0 件にする。
 4. 「計画との対応」に空欄がないことを確かめる。
 5. `out/` と表に個人を特定できる情報がないことを確かめる。
 
@@ -127,7 +127,7 @@ $ARGUMENTS
 
 分析環境が動くことを確かめる（steering「RQ の工程」）。主張は作らない。
 
-1. `studies/000-research-foundation/analysis/smoke.py` に、`docs/method.md` で決めたライブラリを読み込み、小さな計算をして `out/smoke.json` に書くスクリプトを作る。
+1. `studies/000-research-foundation/analysis/00_smoke.py` に、`docs/method.md` で決めたライブラリを読み込み、小さな計算をして `out/smoke.json` に書くスクリプトを作る。
 2. `commands.analysis` で実行し、2 回実行して出力が同じことを確かめる。
 3. 使ったコマンド、言語とライブラリの版を `analysis/analysis.md` に書く。
 4. 動かなければ、`docs/method.md` と `commands.analysis` を直すよう案内する（自動モードでは止まる）。
@@ -137,20 +137,20 @@ $ARGUMENTS
 | 場面 | 自動モードでの動作 |
 |---|---|
 | `plan.md` で決めきれていない分析の細部（図の形、表の並び） | 推奨案を採用する |
-| 計画の変更が要る（指標・基準・比較の相手） | 推奨案を採用し、§5 で記録し、元の計画の結果も出す。`studies/<NNN>/auto-decisions.md` にも書く |
+| 計画の変更が要る（指標・基準・比較の相手） | 推奨案を採用し、§5 で記録し、元の計画の結果も出す。`studies/<NNN-name>/auto-decisions.md` にも書く |
 | 問い・範囲・反証条件を変える必要がある | 止まる |
 | `commands.analysis` が空で、スクリプトが要る | 止まる |
 | スクリプトの失敗 | 直して再実行する。同じ原因で 3 回失敗したら止まる |
 
 ## 9. 出力
 
-- `studies/<NNN>/analysis/analysis.md`（様式: [templates/analysis.md](./templates/analysis.md)）
+- `studies/<NNN-name>/analysis/analysis.md`（様式: [templates/analysis.md](./templates/analysis.md)）
 - 手法ごとの表（`analysis.md` の中か、`analysis/extraction.md`・`analysis/coding.md` など）
-- スクリプト `studies/<NNN>/analysis/*.py`（または `.R`）と、出力 `analysis/out/*.json`、`analysis/out/fig/`
+- スクリプト `studies/<NNN-name>/analysis/*.py`（または `.R`）と、出力 `analysis/out/*.json`、`analysis/out/fig/`
 - `plan.md` の「計画の変更」（変えたとき）
 - `tasks.md` の分析のタスクの `- [x]`
 
-次の工程は `researchkit-findings`（Q10）である。チェックポイント（`research(<RQ>): 分析`）は呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で呼ばれたときはチェックポイントを記録せず、通常のコミットにしてよいかを確かめる。
+次の工程は `researchkit-findings`（Q10）である。チェックポイント（`research(<RQ>): 分析`）は呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で実行したときは、最後に `$HELPER checkpoint <RQ_NAME> Q9 "<『ステップ番号』の節の subject>"` を記録する（`researchkit-worktree`）。
 
 ## 10. 完了報告
 

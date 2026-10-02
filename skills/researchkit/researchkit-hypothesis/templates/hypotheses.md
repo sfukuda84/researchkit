@@ -2,7 +2,7 @@
 
 **調査**: <仮題> | **版**: 1 | **最終更新**: YYYY-MM-DD | **イシューツリー**: `docs/study/issue-tree.md`
 
-状態は `未検証`／`支持`／`棄却`／`保留` のどれか。変えたときは、根拠（`docs/study/pilot/results.md` の節、`studies/<NNN>/findings.md` の主張の ID）を書く。ID は振り直さない。取り下げた仮説は「取り下げ（理由）」と書いて残す。
+状態は `未検証`／`支持`／`棄却`／`保留` のどれか。変えたときは、根拠（`docs/study/pilot/results.md` の節、`studies/<NNN-name>/findings.md` の主張の ID）を書く。ID は振り直さない。取り下げた仮説は「取り下げ（理由）」と書いて残す。
 
 ## 一覧（危うい順）
 

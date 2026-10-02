@@ -76,7 +76,7 @@ disable-model-invocation: false
 | RQ | 計画の読み替え |
 |---|---|
 | `000-research-foundation` | **主張を作らない基盤づくり**なので、仮説と反証条件、確度の付け方、反対の証拠の探し方の節は「対象外（基盤）」と書く。代わりに、基盤ごと（出典台帳、用語集、データの目録、分析環境、検索ログの形式）に、整え方と動作の確かめ方を書く。分析環境は、`commands.analysis` で試しのスクリプトを動かし、`analysis/out/` に JSON が出ることを確かめる計画にする。共通の出典は `S000-` で採番する |
-| `999-research-report` | 収集の計画の代わりに、**統合の計画**を書く。取り込む RQ と主張（`<NNN>-C<n>`）、結論を先に書くピラミッド構造（バーバラ・ミント〈Barbara Minto〉の『The Pyramid Principle』による）での構成、決定ごとの結論と確度の付け方、RQ の間で食い違う主張の扱い、限界と次の問いの集め方、公開の形式（`researchkit-publish`。不要ならその旨）を書く。新しい収集はしない（足りない根拠は、新しい RQ として `researchkit-questions` に戻す）。数値の参照は、リポジトリのルートからの相対パスで書く |
+| `999-research-report` | 収集の計画の代わりに、**統合の計画**を書く。取り込む RQ と主張（`<NNN>-C<n>`）、結論を先に書くピラミッド構造（バーバラ・ミント〈Barbara Minto〉の『The Pyramid Principle』による）での構成、決定ごとの結論と確度の付け方、RQ の間で食い違う主張の扱い、限界と次の問いの集め方、公開の形式（`researchkit-publish`。不要ならその旨）を書く。新しい収集はしない（足りない根拠は、新しい RQ として `researchkit-questions` に戻す）。数値の参照は、`reports/report.md` ではリポジトリのルートからの相対パス、`findings.md` では RQ のディレクトリからの相対パス（`../001-.../analysis/out/...`）で書く（steering の「数値の参照」） |
 
 ## 6. 完了報告
 

@@ -34,8 +34,6 @@ SCAFFOLD = Path(__file__).resolve().parents[1]
 KIT = "researchkit"
 RULE_FILES = ["CLAUDE.md", "AGENTS.md", "GEMINI.md", "opencode.json",
               ".kiro/steering/language.md", ".kiro/steering/research.md"]
-# scaffold のライセンス表示は、調査のリポジトリのルートに置かず .researchkit/ に置く（調査自体のライセンスと混ぜない）
-NOTICE = ("THIRD_PARTY_NOTICES.md", ".researchkit/THIRD_PARTY_NOTICES.md")
 SKILL_SET = "skills/researchkit"
 AGENT_SKILL_DIRS = [".claude/skills", ".agents/skills", ".kiro/skills"]
 STEERING_IMPORTS = ["@.kiro/steering/language.md", "@.kiro/steering/research.md"]
@@ -235,11 +233,6 @@ def main() -> None:
         shutil.copy2(src, dst)
         added.append(rel)
     merge_gitignore(target, added, skipped)
-    src, dst = SCAFFOLD / NOTICE[0], target / NOTICE[1]
-    if src.exists() and not dst.exists():
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dst)
-        added.append(NOTICE[1])
 
     place_skills(target, args.link, added, skipped)
     link_agent_dirs(target, conflicts)

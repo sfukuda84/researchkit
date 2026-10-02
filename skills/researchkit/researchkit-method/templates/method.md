@@ -83,8 +83,8 @@ R9（`researchkit-questions`）で RQ を切り出すとき、`**手法**` の�
 | 実行と依存の管理 | <例: uv。pyproject.toml と uv.lock をルートに置く / `--with` で渡す> | <理由> |
 | 主なライブラリ | <例: pandas、matplotlib> | <理由> |
 | 乱数のシード | <例: 各スクリプトの冒頭で固定し、値を出力の JSON に書く> | <再現のため> |
-| 出力の形式 | `studies/<NNN>/analysis/out/<名前>.json`（割合は 0〜1、単位は `units`） | `numbers.py` が読む |
-| 図表 | <例: `analysis/fig/` に PNG と、元の数値の CSV> | <理由> |
+| 出力の形式 | `studies/<NNN-name>/analysis/out/<名前>.json`（割合は 0〜1、単位は `units`） | `numbers.py` が読む |
+| 図表 | <例: `analysis/out/fig/` に PNG と、元の数値の CSV> | <理由> |
 | テスト | <例: pytest で前処理と集計の検算 / 使わない> | <理由> |
 | 大きなデータ | `data.max_file_mb` = <5> MB を超えるものは `data/large/`（コミットしない） | <理由> |
 

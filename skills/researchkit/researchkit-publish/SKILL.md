@@ -151,7 +151,10 @@ uv run <skills>/researchkit-publish/scripts/build_pptx.py reports/publish/<読�
 
 ## 4. 単独の利用
 
-RQ の工程の外で、読み手の版を足す・作り直すときにも使う。`reports/report.md` が新しくなっていたら、原稿を更新モード（§6）で直す。チェックポイントは記録しない。通常のコミット（`docs(publish): <読み手> の版を作成`）にしてよいかを確かめる。
+RQ の工程の外で、読み手の版を足す・作り直すときにも使う。`reports/report.md` が新しくなっていたら、原稿を更新モード（§6）で直す。
+
+- `999-research-report` の worktree の中で単独で実行したとき（Q9 の途中）は、最後に `$HELPER checkpoint 999-research-report Q9 "<『ステップ番号』の節の subject>"` を記録する（`researchkit-worktree`）。
+- 999 を `main` にマージした後に、`main` で版を足す・作り直すときは、RQ の工程ではないので、通常のコミット（`docs(publish): <読み手> の版を作成`）にする。
 
 ## 5. slides.md の規約
 

@@ -82,7 +82,7 @@ report.md のエグゼクティブサマリーの最初の文を写す。根拠:
 | 2021 | 0 |
 | 2023 | 0 |
 | 2025 | 0 |
-> 出典: <出典の名前。分析の出力（studies/<NNN>/analysis/out/<file>.json）から写す>
+> 出典: <出典の名前。分析の出力（studies/<NNN-name>/analysis/out/<file>.json）から写す>
 
 ---
 
