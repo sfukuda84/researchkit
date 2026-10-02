@@ -1,0 +1,56 @@
+# researchkit のプロジェクト設定（researchkit.py init が作る）
+# パスはプロジェクトのルートからの相対パス。既存の調査に合わせて書き換えてよい（ファイルを動かさずに researchkit を使うため）。
+title:
+
+paths:
+  concept: docs/concept          # core-question.md, seed.md, framing.md, premises.md, backlog.md
+  scan: docs/scan                # wide.md
+  study: docs/study              # issue-tree.md, hypotheses.md, pilot/
+  method: docs/method.md
+  quality: docs/quality.md
+  questions: docs/questions      # 000-research-foundation.md, 001-*.md, 999-research-report.md, README.md, spec_order.md
+  glossary: docs/glossary.md
+  reviews: docs/reviews          # RQ の工程の外のレビュー
+  handover: docs/handover        # CURRENT_STATE.md, PITFALLS.md, sessions/
+  sources: sources               # 出典台帳（1 件 1 ファイル）
+  data: data                     # manifest.md, raw/, large/
+  studies: studies               # RQ ごとの成果物
+  reports: reports               # report.md, publish/
+  constitution: .researchkit/memory/constitution.md
+
+# コマンド。researchkit-method（R7）が埋める。プロジェクトのルートで実行する。
+commands:
+  # 分析のスクリプトを実行する。{script} をスクリプトのパスに置き換える。
+  analysis:            # 例: uv run --with pandas --with matplotlib python {script} / Rscript {script}
+  test:                # 分析のコードのテスト（任意）。例: uv run --with pytest --with pandas pytest studies
+
+# Web 検索の予算（researchkit.py budget）。
+session:
+  web_search_limit: 200
+  reserve: 10               # 見積もりの外に残しておく余裕
+  estimates:                # 工程ごとの Web 検索の見積もり（件）
+    R2: 60
+    R6: 30
+    Q8: 60
+    Q11: 30
+    rq: 100                 # 1 件の RQ（Q2〜Q13）の合計
+  stop_after_bootstrap: true  # 調査全体の工程（R12）の後は、必ずセッションを区切る
+  rqs_unmetered: 1          # 回数を数えられない環境で、1 セッションに進める RQ の数
+
+# 確度の段階（強い順）。憲章（R8）で変えたときは、ここも合わせる。
+confidence:
+  levels: [確実, 可能性が高い, 示唆, 不明]
+
+# 出典
+sources:
+  grades: [A, B, C, D]      # 強い順。最後の等級（未確認）は根拠に使えない
+  min_grade: C              # 主張の根拠に使える最低の等級。品質基準（R11）で変える
+  check_online: false       # check.py の既定で URL と DOI の到達性を確かめるか（--online でも指定できる）
+
+# データ
+data:
+  max_file_mb: 5            # これより大きい生データは data/large/ に置き、目録とハッシュだけをコミットする
+
+# 数値の突き合わせ（numbers.py）
+numbers:
+  tolerance: 0.005          # 相対の許容差（0.005 = 0.5%）。表示の丸めの分を見込む
