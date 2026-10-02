@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""new-researchkit-project: 手元の scaffold から使うときの入口（本体は tool/src/new_researchkit_project/cli.py）。
+
+uv で入れたコマンド（`uv tool install "git+https://github.com/sfukuda84/researchkit#subdirectory=tool"`）は scaffold を
+GitHub から取得するが、このファイルから呼ぶと、このファイルのある scaffold を使う（--link も使える）。
+~/.local/bin などから、このファイルへのシンボリックリンクで呼んでもよい（実体の場所から scaffold を探す）。
+"""
+
+import os
+import sys
+from pathlib import Path
+
+ROOT = Path(os.path.realpath(__file__)).parents[1]
+sys.path.insert(0, str(ROOT / "tool" / "src"))
+
+from new_researchkit_project import cli  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(cli.main(scaffold_dir=ROOT))

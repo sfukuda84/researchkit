@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "new-researchkit-project"
+version = "0.1.0"
+description = "researchkit（AI と一緒に調査・分析を進めるスキルセット）の調査のプロジェクトを作り、AI エージェントで立ち上げ（researchkit-bootstrap）を始めるコマンド"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = []
+
+[project.scripts]
+new-researchkit-project = "new_researchkit_project.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/new_researchkit_project"]
