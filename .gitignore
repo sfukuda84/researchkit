@@ -1,0 +1,75 @@
+# ===== OS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*~
+
+# ===== エディタ / IDE =====
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+.history/
+
+# ===== 環境変数・シークレット =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ===== ログ・一時ファイル =====
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+*.bak
+
+# ===== 依存関係・ビルド成果物 =====
+node_modules/
+.pnpm-store/
+dist/
+build/
+
+# ===== Python・分析 =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.Rhistory
+.RData
+
+# ===== researchkit（researchkit-worktree の作業ツリー） =====
+.worktrees/
+
+# ===== researchkit の生成物 =====
+# Web 検索の回数の記録（セッションごと。コミットしない）
+.researchkit/usage/
+# 分析の一時出力（報告に使う出力は studies/<NNN>/analysis/out/ にコミットする）
+.cache/analysis/
+# 目録だけを入れる大きな生データ（data/manifest.md に出所とハッシュを書く）
+data/large/
+
+# ===== AI エージェント（個人設定・ローカル状態） =====
+# 共有するもの: CLAUDE.md, AGENTS.md, GEMINI.md, opencode.json, .claude/skills/, .agents/skills/, .kiro/skills/, .kiro/steering/, .opencode/commands/
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+.gemini/.env
+
+# researchkit の update が、手で直したファイルの新しい版を置く場所
+.scaffold-new/
