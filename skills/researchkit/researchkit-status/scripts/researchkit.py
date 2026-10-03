@@ -43,6 +43,7 @@ WORKTREE_HELPER = SKILLS_ROOT / "researchkit-worktree" / "scripts" / "worktree_h
 
 BOOTSTRAP_STEPS = [f"R{i}" for i in range(1, 13)]
 BOOTSTRAP_TRAILER = "Researchkit-Bootstrap"
+BOOTSTRAP_TRAILER_RE = re.compile(r"^%s:[ \t]*(R\d+)[ \t]*$" % BOOTSTRAP_TRAILER, re.MULTILINE)
 AUTO_START = "<!-- researchkit:auto:start -->"
 AUTO_END = "<!-- researchkit:auto:end -->"
 STEERING = (".kiro/steering/language.md", ".kiro/steering/research.md")
@@ -146,10 +147,12 @@ def cmd_config(root: Path, args: argparse.Namespace) -> int:
 def bootstrap_done(root: Path) -> list[str]:
     if not rklib.is_git_repo(root):
         return []
-    proc = rklib.git(root, ["log", "--all", f"--format=%(trailers:key={BOOTSTRAP_TRAILER},valueonly)"], check=False)
+    # 本文全体から探す。git の trailer の解釈は最後の段落しか見ないため、エージェントが
+    # Co-Authored-By などを別の段落で足すと、%(trailers) では記録を読めなくなる。
+    proc = rklib.git(root, ["log", "--all", "--format=%B"], check=False)
     if proc.returncode != 0:  # コミットがまだない
         return []
-    found = {line.strip() for line in proc.stdout.splitlines() if line.strip()}
+    found = set(BOOTSTRAP_TRAILER_RE.findall(proc.stdout))
     return [s for s in BOOTSTRAP_STEPS if s in found]
 
 

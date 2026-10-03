@@ -135,6 +135,14 @@ class ResearchkitStatusTest(unittest.TestCase):
                      "-m", f"Researchkit-Bootstrap: R{n}")
         self.assertIn("NEXT_STEP: DONE", self.out("bootstrap"))
 
+    def test_bootstrap_trailer_followed_by_another_paragraph(self) -> None:
+        """Co-Authored-By などが別の段落で足されても、進捗の記録を読める。"""
+        self.init_project()
+        self.git("commit", "-q", "--allow-empty", "-m", "docs(bootstrap): R1 x",
+                 "-m", "Researchkit-Bootstrap: R1",
+                 "-m", "Co-Authored-By: Someone <noreply@example.com>")
+        self.assertEqual(self.out("bootstrap"), "COMPLETED_STEPS: R1\nNEXT_STEP: R2")
+
     def test_status_lists_progress_rqs_and_sources(self) -> None:
         self.init_project()
         (self.repo / "docs" / "questions" / "001-market-size.md").write_text(
