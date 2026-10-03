@@ -126,6 +126,8 @@ ID は振り直さない。取り下げたものも消さずに印を付ける�
 
 分析の出力から得た数値は、直後に `{N:<path>#<key>}` を付ける。`<path>` は JSON のファイルを指す。`studies/` の下の文書（各 RQ の `findings.md`、`999-research-report` の `findings.md` を含む）では、その RQ のディレクトリからの相対パス（999 からほかの RQ の出力を指すときは `../001-market-size/analysis/out/market.json`）で書く。`reports/` の下の文書では、リポジトリのルートからの相対パス（`studies/001-market-size/analysis/out/market.json`）で書く。`<key>` はドット区切りのキーである。`numbers.py` が、直前の数値と JSON の値を突き合わせる（許容差は `config.yaml` の `numbers.tolerance`）。手で計算した数値は `{N:calc}` を付け、計算式と入力を同じ文書の「計算」の節に表で書く。公開用の文書（`researchkit-publish`）では、参照の記号を取り除く。
 
+結果を見た後に足した分析（探索的な分析。レビューの指摘に答えて足したものを含む）の出力は、JSON の `exploratory` の下に置き（`{N:analysis/out/x.json#exploratory.<key>}`）、別の主張にして確度を「示唆」までにする。事前に決めた主張の確度と仮説の判定には使わない。主張の欄でこのキーを使う主張の確度が高いと、`check.py` が `EXPLORATORY_CONFIDENCE` で止める。
+
 ## レビューの 5 軸（`researchkit-review`）
 
 | 軸 | 見ること |

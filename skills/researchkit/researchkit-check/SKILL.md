@@ -53,6 +53,8 @@ $NUM   [--rq <NNN> | --all] [--file <path>]
 | `SELF_CLAIM`、`DUP_CLAIM` | ERROR | 主張が自分を根拠にしている。主張の ID が重複している |
 | `LOW_GRADE` | ERROR | 根拠が、最低等級（`sources.min_grade`。品質基準で決める）未満の出典だけ。等級の高い出典を足すか、確度を下げて主張を弱めるか、主張をやめる |
 | `BAD_CONFIDENCE` | ERROR | 確度が `confidence.levels`（憲章の段階）にない |
+| `EXPLORATORY_CONFIDENCE` | ERROR | 主張の欄の数値が探索的な分析の出力（`{N:…#exploratory.…}`）を参照しているのに、確度が段階の下から 2 つ（既定では `示唆`・`不明`）でない。探索的な分析（結果を見た後に足した分析。レビューで足したものを含む）の結果は別の主張にし、確度を下げる（`researchkit-findings` の §4）。反証・限界の欄で触れるのはよい |
+| `UNLISTED_DATA`、`MISSING_DATA`、`HASH_MISMATCH`、`NO_MANIFEST` | ERROR | データの目録（`data/manifest.md`）と `data/raw/` が合わない。目録にないファイルは出どころを確かめて `$RK data add` で載せる。ないファイルは取り直す。SHA-256 の違いは、生データを加工した・別の版で上書きしたことを示すので、元に戻すか、版違いとして別の行にする（`researchkit-status` の §8） |
 | `SOURCE_NO_FRONTMATTER`、`SOURCE_MISSING_FIELD` | ERROR | 出典のフロントマターがない、必須の項目（`id`、`type`、`title`、`accessed`、`grade`、`url`・`doi`・書誌〈`author` と `publisher`〉のどれか）がない |
 | `SOURCE_ID_MISMATCH`、`SOURCE_ID_FORMAT`、`SOURCE_BAD_GRADE` | ERROR | `id` とファイル名が違う、`id` が `S<NNN>-<NNNN>` でない、等級が `sources.grades` にない |
 | `UNUSED_SOURCE` | WARN | どの RQ（`studies/<NNN>-*/` の文書）からも統合報告（`reports/`）からも参照されていない |

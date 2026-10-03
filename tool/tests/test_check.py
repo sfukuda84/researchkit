@@ -108,6 +108,23 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("NO_MANIFEST", out)
 
+    def test_exploratory_claims_are_capped(self) -> None:
+        text = FINDINGS + (
+            "| C3 | 連鎖でつなぐと年 -0.56%{N:analysis/out/c.json#exploratory.coef_chain} である | S001-0001 | 可能性が高い | — |\n"
+            "| C4 | 新規需要米を除くと年 -0.65%{N:analysis/out/c.json#exploratory.no_rice} である | S001-0001 | 示唆 | — |\n"
+            "| C5 | 主の値は年 -0.56%{N:analysis/out/c.json#cagr.main} である | S001-0001 | 確実 | "
+            "探索的な値 -0.65%{N:analysis/out/c.json#exploratory.no_rice} も同じ側 |\n"
+            "| C6 | 年 -0.80%{N:analysis/out/c.json#exploratory} の感度もある | S001-0001 | 不明 | — |\n")
+        self.write("studies/001-market-size/findings.md", text)
+        code, out = self.run_check("--rq", "001")
+        self.assertEqual(code, 1, out)
+        self.assertEqual(out.count("EXPLORATORY_CONFIDENCE"), 1, out)
+        self.assertIn("C3 は探索的な分析の出力", out)
+        # 主張の欄だけを見る（C5 の反証・限界で探索的な値に触れるのはよい）。示唆・不明はよい
+        self.assertNotIn("C4 は", out)
+        self.assertNotIn("C5 は", out)
+        self.assertNotIn("C6 は", out)
+
     def test_clean_project(self) -> None:
         code, out = self.run_check("--all")
         self.assertEqual(code, 0, out)

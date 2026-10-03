@@ -2,6 +2,7 @@
 """check.py - researchkit の機械検証（出典の参照と出典台帳）
 
 主張の表（findings.md、統合報告 reports/report.md、任意の文書）の根拠の欄と、出典台帳（sources/<ID>.md）を検証する。
+主張の欄で探索的な分析の出力（{N:…#exploratory.…}）を使う主張は、確度が段階の下から 2 つでなければ ERROR にする。
 --rq と --all では、データの目録（data/manifest.md）と data/raw/ のファイルも突き合わせる（目録にないファイル、目録にあるのにないファイル、SHA-256 の不一致）。
 macOS / Linux / Windows で動くように、標準ライブラリだけで書く（Python 3.9 以上）。
 
@@ -62,6 +63,8 @@ DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SOURCE_TYPES = ("web", "paper", "book", "stat", "report", "dataset", "interview", "internal")
 CLAIM_HEADERS = ("ID", "主張", "根拠", "確度")
+# 探索的な分析（結果を見た後に足した分析。レビューで足したものを含む）の出力は、JSON の exploratory の下に置く
+EXPLORATORY_REF_RE = re.compile(r"\{N:[^}#]*#exploratory(?:\.[^}]*)?\}")
 
 
 # ---------------------------------------------------------------- 設定（小さな YAML）
@@ -534,6 +537,11 @@ def check_document(rep: Report, path: Path, root: Path, cfg: dict, sources: dict
             if levels and conf not in levels:
                 rep.error(path, c.line, "BAD_CONFIDENCE",
                           f"{c.id} の確度「{conf}」が confidence.levels（{' / '.join(levels)}）にない")
+            elif (len(levels) >= 2 and conf in levels and levels.index(conf) < len(levels) - 2
+                  and EXPLORATORY_REF_RE.search(c.cells.get("主張", ""))):
+                rep.error(path, c.line, "EXPLORATORY_CONFIDENCE",
+                          f"{c.id} は探索的な分析の出力（#exploratory.…）を主張に使っているのに確度が「{conf}」。"
+                          f"探索的な分析の結果は「{levels[-2]}」を超えない（憲章の確認的と探索的の区別）。別の主張にして確度を下げる")
     # 表の外の出典の参照（本文、計算の表など）
     for no, line in enumerate(text.splitlines(), 1):
         if no in evidence_lines:
