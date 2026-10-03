@@ -40,7 +40,7 @@ $ARGUMENTS
 
 ## 3. 本体（Q8〜Q12）
 
-作業場所は `WORKTREE_DIR`、RQ のディレクトリは `studies/<RQ_NAME>`（以下 `RQ_DIR`）である。各ステップの最後に、`researchkit-worktree` の『ステップ番号』の節の subject で `checkpoint` を記録する。
+作業場所は `WORKTREE_DIR`、RQ のディレクトリは `studies/<RQ_NAME>`（以下 `RQ_DIR`）である。各ステップの最後に `$HELPER checkpoint <RQ_NAME> <step>` を記録する（subject は省くと既定の形になる）。
 
 | ステップ | 内容 | スキル | 成果物 |
 |---|---|---|---|
@@ -94,7 +94,7 @@ $ARGUMENTS
 ### Q11: 5 軸レビュー 1 回目と修正
 
 1. **始める前に** `$RK budget --step Q11 --rq <RQ_NAME>` を実行する。STOP なら Q11 に入らずに止まる（Q10 までのチェックポイントは記録済み）。
-2. `researchkit-review --round 1` の手順で、`findings.md` と根拠（`evidence/`、`analysis/`、`sources/`）を、Source・Logic・Counter・Bias・Numbers の 5 軸でレビューする。定性調査かデータ分析を含む RQ では Ethics を足す。記録は `RQ_DIR/reviews/review-1.md` に書く。可能なら、軸ごとに文脈を持たないサブエージェントで独立に審査し、親が指摘の裏を取ってから採否を決める。
+2. `researchkit-review --round 1` の手順で、`findings.md` と根拠（`evidence/`、`analysis/`、`sources/`）を、Source・Logic・Counter・Bias・Numbers の 5 軸でレビューする。定性調査かデータ分析を含む RQ では Ethics を足す。記録は `RQ_DIR/reviews/review-1.md` に書く。可能なら、軸ごとに文脈を持たないサブエージェントで独立に審査し、親が指摘の裏を取ってから採否を決める。親は対象を全文で読まず、審査を待つ間も読まない。裏取りでは指摘が指す範囲だけを開く（`researchkit-review` の §4.1・§4.3）。
 3. CRITICAL・HIGH・MEDIUM の指摘を直す。主張を直したら、`$CHECK --rq <NNN>` と `$NUM --rq <NNN>` が通ることを確かめ、逆流が要るものは Q10 と同じく上流の文書も直す。
 4. `checkpoint <RQ_NAME> Q11` を記録する。
 

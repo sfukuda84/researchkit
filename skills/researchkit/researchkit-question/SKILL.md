@@ -43,7 +43,7 @@ RQ に入る前（Q1 の前）に `$RK budget --step rq --rq <RQ>` を実行し�
 
 ## 3. 本体（Q2〜Q7-2）
 
-作業場所は `WORKTREE_DIR`、RQ のディレクトリは `studies/<RQ_NAME>`（以下 `RQ_DIR`）である。各ステップの最後に、`researchkit-worktree` の『ステップ番号』の節の subject で `checkpoint` を記録する。指摘や変更がなくても記録する。
+作業場所は `WORKTREE_DIR`、RQ のディレクトリは `studies/<RQ_NAME>`（以下 `RQ_DIR`）である。各ステップの最後に `$HELPER checkpoint <RQ_NAME> <step>` を記録する（subject は省くと既定の形になる）。指摘や変更がなくても記録する。
 
 | ステップ | 内容 | スキル | 成果物 |
 |---|---|---|---|

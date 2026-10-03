@@ -30,6 +30,21 @@ ALL_STEPS = DESIGN_STEPS + EXECUTE_STEPS
 PHASE_STEPS = {"design": DESIGN_STEPS, "execute": EXECUTE_STEPS, "all": ALL_STEPS}
 PHASE_LAST_STEP = {"design": "Q7-2", "execute": "Q12", "all": "Q12"}
 FINISH_STEP = "Q13"
+# checkpoint の subject の既定（SKILL.md の「ステップ番号」の表と同じ。{} は RQ の名前）
+STEP_SUBJECTS = {
+    "Q2": "docs({}): 問いの仕様を作成",
+    "Q3": "docs({}): 仕様を明確化（1 回目）",
+    "Q4": "docs({}): 仕様を明確化（2 回目）",
+    "Q5": "docs({}): 調査計画を作成",
+    "Q6": "docs({}): タスクを作成",
+    "Q7-1": "docs({}): 整合性を検証（1 回目）",
+    "Q7-2": "docs({}): 整合性を検証（2 回目）",
+    "Q8": "research({}): 収集",
+    "Q9": "research({}): 分析",
+    "Q10": "research({}): 主張をまとめる",
+    "Q11": "review({}): 5 軸レビュー（1 回目）",
+    "Q12": "review({}): 5 軸レビュー（2 回目）",
+}
 REPORT_PREFIX = "999-"  # 統合報告の予約番号。ほかのすべての RQ が終わってから始める
 ORDER_LINK_RE = re.compile(r"\]\((?:\./)?([0-9]{3}-[a-z0-9][a-z0-9-]*)\.md\)")
 STEP_TRAILER_RE = re.compile(r"^Researchkit-Step:\s*(\S+)", re.MULTILINE)
@@ -717,12 +732,13 @@ def cmd_state(args: list[str]) -> None:
 
 
 def cmd_checkpoint(args: list[str]) -> None:
-    if len(args) < 3:
-        raise HelperError("使い方: checkpoint <rq> <step> <subject>")
+    if len(args) < 2:
+        raise HelperError("使い方: checkpoint <rq> <step> [<subject>]")
     name = resolve_rq(args[0])
-    step, subject = args[1], args[2]
+    step = args[1]
     if step not in ALL_STEPS:
         raise HelperError(f"ステップ '{step}' は不正です（有効値: {' '.join(ALL_STEPS)}）。")
+    subject = args[2] if len(args) > 2 else STEP_SUBJECTS[step].format(name)
     wt = worktree_of(name)
     if not wt.is_dir():
         raise HelperError(f"worktree {wt} がありません。先に ensure を実行してください。")
@@ -1019,7 +1035,7 @@ Commands:
         Q1 準備。worktree があれば再利用し、なければ {MAIN_BRANCH} から作る。進捗と次のステップを表示する
   state <rq> --phase design|execute|all
         変更せずに進捗と次のステップを表示する
-  checkpoint <rq> <step> <subject>
+  checkpoint <rq> <step> [<subject>]
         worktree の変更をすべてコミットし、trailer "Researchkit-Step: <step>" と "Researchkit-Question: <rq>" で
         完了を記録する（変更がなくても空コミットで記録）
   finish <rq> --phase design|execute|all [--allow-unchecked] [--commit-leftovers] [--switch]
