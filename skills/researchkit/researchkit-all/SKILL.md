@@ -14,7 +14,14 @@ disable-model-invocation: false
 - 設計の工程 Q2〜Q7-2: [`researchkit-question` の §3](../researchkit-question/SKILL.md)
 - 実行の工程 Q8〜Q12: [`researchkit-execute` の §3](../researchkit-execute/SKILL.md)
 
-**ステップ番号、ヘルパースクリプト（`$HELPER`）、再開、安全規則、対話、引数の解釈、自動モードは [`researchkit-worktree`](../researchkit-worktree/SKILL.md) に従う。** 作業を始める前に、`researchkit-worktree`、`researchkit-question`、`researchkit-execute` の 3 つの SKILL.md を読むこと。この文書では、`researchkit-worktree` の節を「『ステップ番号』の節」のように見出しの名前で参照する。
+**ステップ番号、ヘルパースクリプト（`$HELPER`）、再開、安全規則、対話、引数の解釈、自動モードは [`researchkit-worktree`](../researchkit-worktree/SKILL.md) に従う。** 作業を始める前に、`researchkit-worktree` の SKILL.md と、残っている工程の SKILL.md だけを読むこと（`references/` は要るときだけ開く）。
+
+| `NEXT_STEP`（`$HELPER state <RQ>` か `ensure` の出力。RQ がまだなければ Q1） | 読む SKILL.md |
+|---|---|
+| Q1〜Q7-2 | `researchkit-worktree`、`researchkit-question`（Q8 に入るときに `researchkit-execute`） |
+| Q8〜Q12（区切りの後の再開を含む） | `researchkit-worktree`、`researchkit-execute`。`researchkit-question` は読まない |
+
+各ステップの手順のスキル（`researchkit-collect` など）は、そのステップに入るときに本文だけを読む。区切りの後に再開したセッションでは、`plan.md`・`tasks.md` を全文で読まずに `$RK brief <RQ_NAME> --step <NEXT_STEP>` で始める（`researchkit-execute` の「入力情報」）。この文書では、`researchkit-worktree` の節を「『ステップ番号』の節」のように見出しの名前で参照する。
 
 パスは既定の配置で書いている。`.researchkit/config.yaml` の `paths` で読み替える。`$RK`、`$HELPER` の意味は steering の「エージェントの行動規範」のとおりである。
 
