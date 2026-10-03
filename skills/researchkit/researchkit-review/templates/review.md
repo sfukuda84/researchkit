@@ -2,7 +2,7 @@
 
 - **日付**: <YYYY-MM-DD>
 - **対象**: <studies/<NNN-name>/findings.md と根拠（evidence/、analysis/、sources/ の N 件） / reports/report.md / パス>
-- **審査の方法**: <サブエージェントによる独立審査（軸ごと） / 親による順次審査>
+- **審査の方法**: <サブエージェントによる独立審査（軸ごと。前提は templates/brief.md の定型） / 親による順次審査>。審査した状態: <コミット / 作業ツリー>。渡した不採用・人の確認への一覧: <2 回目のとき。R1-S04 など>
 - **軸**: <Source, Logic, Counter, Bias, Numbers（, Ethics）>
 - **機械検証**: check.py errors=<n> warnings=<n>（--online <あり / なし>） / numbers.py errors=<n> warnings=<n>
 - **2 回目のとき**: 1 回目の記録 [review-1.md](./review-1.md)、修正の差分 `git diff <range>`
