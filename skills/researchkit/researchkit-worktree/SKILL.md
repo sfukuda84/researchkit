@@ -25,32 +25,12 @@ Claude Code、Codex CLI、Antigravity、Kiro CLI、opencode のいずれでも�
 
 ## 2. ステップ番号
 
-ステップ番号は 3 スキルで共通の通し番号であり、進捗の記録と再開の判定に使う。
+ステップは 3 スキルで共通の通し番号（Q1 準備、Q2 仕様、Q3〜Q4 明確化、Q5 計画、Q6 タスク、Q7-1〜Q7-2 整合性の検証、Q8 収集、Q9 分析、Q10 主張のまとめ、Q11〜Q12 5 軸レビュー、Q13 片付け）。`design` は Q2〜Q7-2、`execute` は Q8〜Q12、`all` は Q2〜Q12 で、どれも Q1 で始まり Q13 で終わる。`999-research-report` は Q8 が `researchkit-synthesize`、Q9 が `researchkit-publish`、Q10 が `researchkit-findings` の統合モード、`000-research-foundation` は主張を作らない（番号と subject は変えない）。
 
-| ステップ | 内容 | 担当スキル（本体） | チェックポイントの subject |
-|---|---|---|---|
-| Q1 | 準備（`ensure`） | 3 スキル共通 | （コミットなし） |
-| Q2 | 問いの仕様 | researchkit-specify | `docs(<RQ_NAME>): 問いの仕様を作成` |
-| Q3 | 明確化 1 回目 | researchkit-clarify | `docs(<RQ_NAME>): 仕様を明確化（1 回目）` |
-| Q4 | 明確化 2 回目（調査特有の曖昧さ） | researchkit-clarify | `docs(<RQ_NAME>): 仕様を明確化（2 回目）` |
-| Q5 | 調査計画 | researchkit-plan | `docs(<RQ_NAME>): 調査計画を作成` |
-| Q6 | タスク | researchkit-tasks | `docs(<RQ_NAME>): タスクを作成` |
-| Q7-1 | 整合性の検証 1 回目（検出と修正） | researchkit-analyze | `docs(<RQ_NAME>): 整合性を検証（1 回目）` |
-| Q7-2 | 整合性の検証 2 回目（確認） | researchkit-analyze | `docs(<RQ_NAME>): 整合性を検証（2 回目）` |
-| Q8 | 収集 | researchkit-collect | `research(<RQ_NAME>): 収集` |
-| Q9 | 分析 | researchkit-analysis | `research(<RQ_NAME>): 分析` |
-| Q10 | 主張のまとめと逆流 | researchkit-findings | `research(<RQ_NAME>): 主張をまとめる` |
-| Q11 | 5 軸レビュー 1 回目と修正 | researchkit-review | `review(<RQ_NAME>): 5 軸レビュー（1 回目）` |
-| Q12 | 5 軸レビュー 2 回目と修正 | researchkit-review | `review(<RQ_NAME>): 5 軸レビュー（2 回目）` |
-| Q13 | 片付け（`finish`） | 3 スキル共通 | `merge(<RQ_NAME>): <phase>`（自動。進捗の判定に使うため、この形は変えない） |
+- ステップが終わったら `$HELPER checkpoint <RQ_NAME> <step>` で記録する。subject は省くと既定の形（例: `research(<RQ_NAME>): 収集`）になる。変更がなくても空コミットで記録する（飛ばさない）。
+- 進捗は trailer `Researchkit-Step`・`Researchkit-Question` と `merge(<RQ_NAME>): <phase>` のマージコミットから判定する。RQ の状態欄は `finish` が更新する（手で書き換えない）。
 
-- フェーズとステップの対応: `design` は Q2〜Q7-2（`researchkit-question`）、`execute` は Q8〜Q12（`researchkit-execute`）、`all` は Q2〜Q12（`researchkit-all`）。どのフェーズも Q1 で始まり Q13 で終わる。
-- `999-research-report` では、Q8 の本体が `researchkit-synthesize`、Q9 が `researchkit-publish`（不要なら、その旨を記録して空のチェックポイントにする）、Q10 が `researchkit-findings` の統合モードになる。ステップ番号と subject は変えない。
-- `000-research-foundation` は主張を作らない。Q8 で出典台帳・用語集・データの目録・分析環境を整え、Q9 で分析環境が動くことを確かめ、Q10 で残作業をまとめる。ステップ番号と subject は変えない。
-
-`checkpoint` はコミットに trailer `Researchkit-Step: <step>` と `Researchkit-Question: <RQ_NAME>` を付ける。変更がないステップも空コミットで記録する（飛ばさない）。進捗は、`main` とブランチにあるこの trailer、`main` にマージ済みの `studies/<RQ_NAME>/tasks.md`、`merge(<RQ_NAME>): execute|all` のマージコミットから判定する。trailer には RQ の名前が入っているので、競合を手で解消してマージした後に `finish` を再実行しても進捗は失われない。Pull Request などで取り込んだ RQ は、`main` に `findings.md` があり、`tasks.md` の `[人]` 以外のタスクがすべて `- [x]` なら、実行済みとみなす。
-
-RQ の概要ファイル（`docs/questions/<RQ_NAME>.md`）のヘッダ行の `**状態**` と、`docs/questions/README.md` の一覧の「状態」の列は、`finish` が更新する。設計の工程の後は `設計済み`（今の状態が `未着手` のときだけ）、実行の工程（execute / all）の後は `完了` にする。`tasks.md` に未完了の `[人]` のタスクが残っていれば、`完了` ではなく `人の作業待ち` にする。状態を手で書き換える必要はない。
+ステップごとの担当スキルと subject の表、進捗の判定と状態欄の規則の全文は [references/steps.md](references/steps.md)。
 
 ## 3. 共通手順
 
@@ -80,33 +60,18 @@ RQ の概要ファイル（`docs/questions/<RQ_NAME>.md`）のヘッダ行の `*
 - 1 つのステップが終わったら、そのステップのチェックポイントを必ず記録する。
 
   ```bash
-  $HELPER checkpoint <RQ_NAME> <step> "<§2 の subject>"
+  $HELPER checkpoint <RQ_NAME> <step>   # subject は省くと §2 の既定の形
   ```
 
 - 長いステップ（特に Q8 の収集と Q9 の分析）の途中では、trailer なしの通常のコミットを作ってよい（例: 出典 10 件ごと、分析のスクリプト 1 本ごと）。完了の記録は、ステップの最後の `checkpoint` だけで行う。
 
 ### Q13 片付け
 
-1. **worktree の外に出てから**、`$HELPER finish <RQ_NAME> --phase <phase>` を実行する（`cd "$REPO_ROOT"`）。worktree の中で実行すると、スクリプトは止まる。スクリプトは次を行う。
-   - 担当範囲の最終ステップ（design は Q7-2、execute と all は Q12）が完了し、`RQ_DIR` に `spec.md`・`plan.md`・`tasks.md` があることを確かめる。
-   - execute と all では、`tasks.md` に `[人]` 以外の未完了のタスクがないことを確かめる（あれば `UNCHECKED_TASKS` で止まる。`[人]` だけなら続けて、最後に `HUMAN_TASKS_PENDING` を出す）。
-   - worktree に、どのステップにも含まれない変更があれば止まる（`LEFTOVER_CHANGES`）。
-   - `docs/questions/<RQ_NAME>.md` の状態欄と `README.md` の一覧の状態の列を更新し（§2）、`docs(<RQ_NAME>): 状態を「<状態>」に更新` としてコミットする。
-   - メインの作業ツリーに未コミットの変更がないことを確かめ、`main` にいることを確かめる（いなければ `NOT_ON_MAIN`）。
-   - `git merge --no-ff -m "merge(<RQ_NAME>): <phase>"` でマージする。ブランチがすでにマージ済み（競合を手で解消した後など）なら、マージを飛ばして片付けだけを行う。
-   - worktree の `data/large/`（コミットしない大きな生データ）にあるファイルを、メインの作業ツリーの同じ場所に写す（既存のファイルは上書きしない。出力は `KEPT_LARGE_DATA`）。分析を再実行できるようにするためである。
-   - worktree とブランチを削除する。そのほかの無視対象のファイル（`.env` など）は一緒に消えるので、出力の `REMOVED_IGNORED` に挙がったものはユーザーに知らせる。
-   - 出力の `RQ_STATUS` が、更新した後の状態である。クラウドセッションでは、続けてマージ先のブランチを push する（§8）。
-2. マージが済んだら（`finish` が成功したら）、メインの作業ツリー（`main`）で引き継ぎ書を更新してコミットする。trailer は付けない。
+1. **worktree の外に出てから**（`cd "$REPO_ROOT"`）、`$HELPER finish <RQ_NAME> --phase <phase>` を実行する。状態欄の更新、`main` への `--no-ff` マージ、worktree とブランチの削除をスクリプトが行う。止まったときのコード（`UNCHECKED_TASKS`、`LEFTOVER_CHANGES`、`NOT_ON_MAIN`）と出力（`RQ_STATUS`、`HUMAN_TASKS_PENDING`、`REMOVED_IGNORED`）の扱いは下の詳細を読む。
+2. 成功したら、`main` で `$RK handover --note "<RQ_NAME> の <phase> を完了（状態: <RQ_STATUS>）"` を実行し、`git add docs/handover && git commit -m "docs(handover): 引き継ぎ書を更新"` でコミットする。`WARN STALE_MANUAL` が出たら、手で書く節（次にやること、判断待ち）を今の状態に直してから、もう一度 `handover` を実行してコミットする（自動モードでも直す）。
+3. マージで競合したら、内容をユーザーに示し、方針を確かめてから解消して、もう一度 `finish` を実行する。
 
-   ```bash
-   $RK handover --note "<RQ_NAME> の <phase> を完了（状態: <RQ_STATUS>）"
-   git add docs/handover && git commit -m "docs(handover): 引き継ぎ書を更新"
-   ```
-
-   引き継ぎ書の中身と、手で書く節（今の目標、次にやること、判断待ち）の直し方は `researchkit-status` の「引き継ぎ書」の節に従う。この RQ の作業で踏んだ罠があれば、`PITFALLS.md` にも足す。
-   - **手で書く節を必ず見直す**: `finish` は最後に `HANDOVER:` の行で、これを促す。`handover` が `WARN STALE_MANUAL`（手で書く節が RQ のマージより前から変わっていない）を出したら、コミットする前に「次にやること」「判断待ち」を今の状態に合わせて直し、もう一度 `$RK handover` を実行して警告が消えたことを確かめる。自動の節の「次の候補（自動）」と「手で書く節が挙げる RQ と今の状態」を材料にする。自動モードでも直す（直すのは引き継ぎ書の文だけで、判断は変えない。判断待ちを片付けたことにしない）。
-3. マージで競合したときは、worktree とブランチが残る。競合の内容をユーザーに示し、解消の方針を確かめてから、メインの作業ツリーで解消してマージをコミットし、もう一度 `finish` を実行する。マージコミットのメッセージは `merge(<RQ_NAME>): <phase>` のままにする。並行して進めた RQ が同じ出典ファイルの `used_in` や `docs/glossary.md` を変えたときに競合しやすい。両方の追記を残す形で解消する。
+スクリプトが行うことの全文、引き継ぎ書の直し方、競合の解消の仕方は [references/finish.md](references/finish.md)。
 
 ### 人のタスクの片付け
 
@@ -118,18 +83,11 @@ RQ の概要ファイル（`docs/questions/<RQ_NAME>.md`）のヘッダ行の `*
 
 ## 4. 共通規則
 
-- **対話**: 問いの範囲、答えの形、手法の選択、反証条件、確度の付け方、レビューの指摘の直し方など、ユーザーの判断が必要な事項は、推奨案（`**Recommended:**`）と理由を添えて質問し、合意を得てから進める。質問は `AskUserQuestion`（ほかのエージェントでは同じ働きのツール。なければ選択肢と推奨案を文章で示して回答を待つ）で行う。引数に `--auto` があるときは、質問せずに §7 の自動モードで進める（各スキル本文の 💬 の質問も含む）。
-- **安全規則**:
-  - `rm -rf`、`git reset --hard`、`git clean -f`、`git push --force` などの破壊的なコマンドは使わない。worktree とブランチの操作は `$HELPER` だけで行う。
-  - 出典、生データ（`data/raw/`、`data/large/`）、インタビューの記録を、ユーザーの了承なしに消さない。生データは加工せず、加工したものは `RQ_DIR/analysis/` に置く。
-  - `[人]` のタスクは実行せず、自動モードでも `- [x]` にしない（§3『人のタスクの片付け』）。
-  - 秘密情報（API キー、社内データの認証情報、個人情報）の値を読んだり、出力したり、コミットしたりしない。
-  - 有料のデータベースや統計の利用規約、引用の範囲を守る。判断に迷うものは `[人]` にする。法的な判断はしない。
-- **言語**: 応答と成果物は、プロジェクトの言語ルール（`.kiro/steering/language.md`）に従う。最終成果物（`reports/`）の言語は `docs/questions/999-research-report.md` に従う。
-- **分析のコマンド**: 分析のスクリプトを実行するコマンドは、`.researchkit/config.yaml` の `commands.analysis`（`$RK config get commands.analysis` で読む。`{script}` をスクリプトのパスに置き換える）を正とする。テストは `commands.test`。空なら `docs/method.md` の分析環境から判断する。判断できなければユーザーに確かめる。
-- **出典 ID**: 新しい出典の ID は `$RK sources next <NNN> --count <k>` で払い出す（`<NNN>` はこの RQ の番号）。サブエージェントに並行して集めさせるときは、範囲を分けて渡す（steering の「サブエージェントに任せるとき」）。既存の出典を使うときは、新しく作らずに `used_in` に足す。
-- **サブエージェント**: 収集（Q8）やレビューの軸（Q11、Q12）をサブエージェントに任せるときは、steering の「サブエージェントに任せるとき」の分担に従う。チェックポイントのコミットと `auto-decisions.md` への記録は親が行う。
-- **並行**: 1 つの統括スキルの中では、RQ を 1 件ずつ直列に進める（§6）。別のセッションで別の RQ を並行して進めてもよいが、同じ RQ を 2 つのセッションで同時に進めない。
+- **対話**: ユーザーの判断が要る事項は、推奨案（`**Recommended:**`）と理由を添えて質問する。`--auto` では質問せずに §7 で進める。
+- **安全規則**: 破壊的なコマンド（`rm -rf`、`git reset --hard`、`git clean -f`、`git push --force`）を使わず、worktree とブランチの操作は `$HELPER` だけで行う。出典・生データ・インタビューの記録を了承なしに消さない（生データは加工しない）。`[人]` のタスクは実行せず、`- [x]` にしない。秘密情報の値を読まない・出さない・コミットしない。利用規約と引用の範囲を守り、法的な判断はしない。
+- **分析のコマンド**は `commands.analysis`（`$RK config get commands.analysis`）を正とする。**出典 ID** は `$RK sources next <NNN> --count <k>` で払い出す。**サブエージェント**は steering の「サブエージェントに任せるとき」に従い、チェックポイントと `auto-decisions.md` は親が書く。RQ は 1 件ずつ直列に進め、同じ RQ を 2 つのセッションで同時に進めない。
+
+各規則の全文は [references/rules.md](references/rules.md)。
 
 ## 5. セッションの区切り
 

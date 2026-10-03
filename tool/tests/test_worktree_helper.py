@@ -235,6 +235,14 @@ class WorktreeHelperScenario(unittest.TestCase):
         cfg.write_text("session:\n  split_after:\n    - Q8\n    - Q11\n  rqs_unmetered: 1\n", encoding="utf-8")
         self.assertIn("SPLIT_SESSION: Q11", self.out("checkpoint", "1", "Q11", "x: Q11"))
 
+    def test_checkpoint_default_subject(self) -> None:
+        self.assertIn("WORKTREE_STATE: created", self.out("ensure", "1", "--phase", "all"))
+        self.assertIn("CHECKPOINT: Q2", self.out("checkpoint", "1", "Q2"))
+        wt = self.repo / ".worktrees" / "001-market-size"
+        log = subprocess.run(["git", "log", "-1", "--format=%s%n%b"], cwd=wt, capture_output=True, text=True).stdout
+        self.assertIn("docs(001-market-size): 問いの仕様を作成", log)
+        self.assertIn("Researchkit-Step: Q2", log)
+
     def test_report_waits_for_other_rqs(self) -> None:
         self.assertIn("DEPENDENCY_PENDING", self.out("ensure", "999", "--phase", "all"))
         self.assertEqual(self.code("ensure", "999", "--phase", "all"), 3)

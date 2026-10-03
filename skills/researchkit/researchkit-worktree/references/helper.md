@@ -19,7 +19,7 @@ skills/researchkit/rk helper <command> ...
 |---|---|
 | `$HELPER ensure <RQ> --phase design\|execute\|all` | Q1 準備。worktree があれば再利用し、なければ `main` から作る |
 | `$HELPER state <RQ> --phase design\|execute\|all` | 変更せずに進捗を表示する |
-| `$HELPER checkpoint <RQ> <step> "<subject>"` | worktree の変更をすべてコミットし、ステップの完了を記録する |
+| `$HELPER checkpoint <RQ> <step> ["<subject>"]` | worktree の変更をすべてコミットし、ステップの完了を記録する。subject を省くと、ステップごとの既定の形（`references/steps.md` の表）になる |
 | `$HELPER finish <RQ> --phase design\|execute\|all [--allow-unchecked] [--commit-leftovers] [--switch]` | Q13 片付け。RQ の状態を更新し、`main` に `--no-ff` でマージし、worktree とブランチを削除する。worktree の外で実行する |
 | `$HELPER abort <RQ> [--yes]` | worktree とブランチを破棄する。`--yes` がなければ対象を表示するだけ |
 | `$HELPER list` | 全 RQ の名前を着手順（`docs/questions/spec_order.md` の並び、その後に番号順。`999` は常に最後）で表示する |
