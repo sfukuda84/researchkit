@@ -30,7 +30,7 @@ $ARGUMENTS
 
 始める前に、調査全体の工程が終わっていることを確かめる。`$RK bootstrap` の `NEXT_STEP` が `DONE` でなければ、残っているステップを示し、先に `researchkit-bootstrap` を実行するよう案内する。既存の調査に取り込んだ（`--adopt`）などで工程の記録がないときは、`docs/questions/` と憲章があれば、ユーザーに確かめて進めてよい（自動モードでは、両方があれば進める）。
 
-RQ に入る前（Q1 の前）に `$RK budget --step rq` を実行し、`VERDICT: STOP`（終了コード 4）なら、この RQ に入らずに止まる（steering の「セッションの区切り」、`researchkit-worktree` の『セッションの区切り』）。設計の工程だけでも、実行の工程に続けて入れるだけの残りがあることを確かめておく。Q5 で情報源やデータベースの所在を Web で確かめるときは、その前に `$RK budget --need <見積もり>` も実行し、STOP なら止まる。
+RQ に入る前（Q1 の前）に `$RK budget --step rq --rq <RQ>` を実行し、`VERDICT: STOP`（終了コード 4）なら、この RQ に入らずに止まる（steering の「セッションの区切り」、`researchkit-worktree` の『セッションの区切り』）。設計の工程だけでも、実行の工程に続けて入れるだけの残りがあることを確かめておく。Q5 で情報源やデータベースの所在を Web で確かめるときは、その前に `$RK budget --need <見積もり>` も実行し、STOP なら止まる。
 
 対象の RQ ごとに、次を順に行う。
 

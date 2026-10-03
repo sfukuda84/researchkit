@@ -94,7 +94,7 @@ $ARGUMENTS
 
 ### 4.1 始める前に
 
-1. **予算**: Q11 として呼ばれたときは `$RK budget --step Q11` を実行する（呼び出し元が直前に確かめていれば省いてよい）。2 回目（Q12）と単独の実行では、Counter 軸の検索の見積もりで `$RK budget --need <件数>` を実行する。`VERDICT: STOP`（終了コード 4）なら始めずに止まる。自動モードでも止まる。新しいセッションで同じ引数で実行すれば、続きから再開する。
+1. **予算**: Q11 として呼ばれたときは `$RK budget --step Q11 --rq <RQ_NAME>` を実行する（呼び出し元が直前に確かめていれば省いてよい）。2 回目（Q12）と単独の実行では、Counter 軸の検索の見積もりで `$RK budget --need <件数>` を実行する。`VERDICT: STOP`（終了コード 4）なら始めずに止まる。自動モードでも止まる。新しいセッションで同じ引数で実行すれば、続きから再開する。
 2. **文脈の読み込み**: 対象のファイルと、`spec.md`、`plan.md`、`docs/study/hypotheses.md`、憲章、`docs/quality.md`、`docs/questions/<NNN>.md`（`**手法**` と「つながる決定」）、`docs/concept/premises.md`（利害関係）を読む。
 3. **機械検証**: `$CHECK --rq <NNN>`（Source 軸を含むときは `--online` も）と `$NUM --rq <NNN>` を実行し、結果を Source・Numbers の審査に渡す。報告書は `--file` で指定する。
 

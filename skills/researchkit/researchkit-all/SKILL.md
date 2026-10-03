@@ -36,14 +36,14 @@ $ARGUMENTS
 
 対象の RQ ごとに、次を順に行う。
 
-1. **予算の確認**: `$RK budget --step rq` を実行する。`VERDICT: STOP`（終了コード 4）なら、この RQ に入らずに止まる。これは失敗ではなく区切りであり、新しいセッションで同じスキルを同じ引数で実行すれば続きから再開する。途中の RQ を再開するときは、残りのステップの分だけを見積もってよい（設計の工程が済んでいれば `--step Q8`、Q11 から先だけなら `--step Q11`）。
+1. **予算の確認**: `$RK budget --step rq --rq <RQ>` を実行する。`VERDICT: STOP`（終了コード 4）なら、この RQ に入らずに止まる。これは失敗ではなく区切りであり、新しいセッションで同じスキルを同じ引数で実行すれば続きから再開する。途中の RQ を再開するときは、残りのステップの分だけを見積もってよい（設計の工程が済んでいれば `--step Q8 --rq <RQ_NAME>`、Q11 から先だけなら `--step Q11 --rq <RQ_NAME>`）。
 2. **Q1 準備**: 『Q1 準備』の節に従い、`$HELPER ensure <RQ> --phase all` を実行する。
    - 設計がすでに `main` にマージ済みの RQ は、Q2〜Q7-2 が完了済みと判定され、`NEXT_STEP` が Q8 になる。
    - `999-research-report` で `PRECONDITION: DEPENDENCY_PENDING` が出たら、残っている RQ を示して止まる（範囲指定なら飛ばす）。
 3. **設計の工程**: `researchkit-question` の §3 の Q2〜Q7-2 のうち、`NEXT_STEP` 以降を順に実行する。
    - `researchkit-question` の §2（Q1 と Q13）は実行しない。**Q7-2 の後で `finish` を実行せず、マージしないこと。**
 4. **実行の工程**: 同じ worktree のまま、`researchkit-execute` の §3 の Q8〜Q12 を順に実行する。
-   - **Q8 の前に `$RK budget --step Q8`、Q11 の前に `$RK budget --step Q11` を実行する。** STOP なら、そのステップに入らずに止まる。それまでのチェックポイントは記録済みなので、次のセッションでそのステップから再開する。
+   - **Q8 の前に `$RK budget --step Q8 --rq <RQ_NAME>`、Q11 の前に `$RK budget --step Q11 --rq <RQ_NAME>` を実行する。** STOP なら、そのステップに入らずに止まる。それまでのチェックポイントは記録済みなので、次のセッションでそのステップから再開する。
    - `researchkit-execute` の §2（予算の確認、Q1、Q13）は実行しない。worktree を作り直さないこと。
 5. **Q13 片付け**: 『Q13 片付け』の節に従い、`$HELPER finish <RQ_NAME> --phase all` を実行し、引き継ぎ書を更新してコミットする。状態は `完了`、`[人]` のタスクが残れば `人の作業待ち` になる。
 6. 次の RQ があれば 1 に戻る。回数を数えられない環境（`budget` が `VERDICT: UNMETERED`）では、このセッションで `session.rqs_unmetered`（既定 1）件の RQ を終えたところで止まる。

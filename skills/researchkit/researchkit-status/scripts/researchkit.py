@@ -9,7 +9,7 @@
   python3 researchkit.py [--root <dir>] handover [--note <text>]
   python3 researchkit.py [--root <dir>] doctor
   python3 researchkit.py [--root <dir>] pitfall <text>
-  python3 researchkit.py [--root <dir>] budget [--step <STEP> | --need <N>]
+  python3 researchkit.py [--root <dir>] budget [--step <STEP> | --need <N>] [--rq <RQ>]
   python3 researchkit.py [--root <dir>] hooks install
   python3 researchkit.py [--root <dir>] sources next <NNN> [--count <k>]
   python3 researchkit.py [--root <dir>] sources list [--grade A,B] [--rq <NNN>] [--unused]
@@ -549,28 +549,126 @@ def current_session_id() -> str:
     return (os.environ.get("CLAUDE_CODE_SESSION_ID") or os.environ.get("CLAUDE_SESSION_ID") or "").strip()
 
 
+RQ_STEPS = ("Q8", "Q11", "Q12", "rq")
+
+
+def find_rq_files(root: Path, cfg: dict, rq: str) -> tuple[str, Path | None, Path | None]:
+    """RQ の名前、概要（docs/questions/<RQ>.md）、計画（studies/<RQ>/plan.md）を探す。
+
+    worktree の中で作業中の計画は、メインの作業ツリーの .worktrees/<RQ>/ にある。プロジェクトのルート・メインの作業ツリー・
+    その worktree の順に探す。
+    """
+    num = rklib.normalize_rq_number(rq)
+    bases = list(dict.fromkeys([root, rklib.main_worktree(root)]))
+    qrel = cfg["paths"]["questions"]
+    srel = cfg["paths"]["studies"]
+    name, question = "", None
+    for base in bases:
+        hits = sorted((base / qrel).glob(f"{num}-*.md"))
+        if hits:
+            question, name = hits[0], hits[0].stem
+            break
+    if not name:
+        for base in bases:
+            hits = sorted(p for p in (base / srel).glob(f"{num}-*") if p.is_dir())
+            if hits:
+                name = hits[0].name
+                break
+    if not name:
+        raise RkError(f"RQ {num} が見つからない（{qrel}/{num}-*.md も {srel}/{num}-*/ もない）")
+    plan = None
+    for base in bases:
+        for cand in (base / srel / name / "plan.md", base / ".worktrees" / name / srel / name / "plan.md"):
+            if cand.is_file():
+                plan = cand
+                break
+        if plan:
+            break
+    return name, question, plan
+
+
+def plan_estimates(plan: Path) -> dict[str, int]:
+    """plan.md の「検索数の見積もり」の表から、ステップごとの WebSearch の見積もり（幅なら上限）を読む。
+
+    見積もりの欄に「WebSearch 12〜20」のように WebSearch の値があればそれを、なければ最初の数（幅なら上限）を使う。
+    budget は WebSearch の回数で判定するので、WebFetch の分は入れない。
+    """
+    out: dict[str, int] = {}
+    rows = rklib.read_table(plan, require="ステップ")
+    for row in rows:
+        step = re.match(r"\s*(Q\d+(?:-\d)?)", row.get("ステップ", ""))
+        cell = next((v for k, v in row.items() if k.startswith("見積もり")), "")
+        if not step or not cell:
+            continue
+        m = re.search(r"WebSearch\D{0,3}(\d+)(?:\s*[〜~～-]\s*(\d+))?", cell) or re.search(r"(\d+)(?:\s*[〜~～-]\s*(\d+))?", cell)
+        if m:
+            out[step.group(1)] = int(m.group(2) or m.group(1))
+    return out
+
+
+def rq_methods(question: Path | None) -> list[str]:
+    if question is None or not question.is_file():
+        return []
+    m = re.search(r"\*\*手法\*\*[:：]\s*([^|\n]+)", question.read_text(encoding="utf-8"))
+    return [x.strip() for x in re.split(r"[,、/\s]+", m.group(1)) if x.strip()] if m else []
+
+
+def estimate(step: str, cfg: dict, plan_est: dict[str, int], methods: list[str]) -> tuple[int, str]:
+    """1 つのステップの見積もりと、その出どころ。plan.md → 手法ごとの既定（最大）→ session.estimates の順。"""
+    sc = cfg.get("session") or {}
+    if step in plan_est:
+        return plan_est[step], "plan.md"
+    by_method = sc.get("estimates_by_method") or {}
+    vals = [int((by_method.get(m) or {}).get(step)) for m in methods if (by_method.get(m) or {}).get(step) is not None]
+    if vals:
+        return max(vals), f"estimates_by_method（{', '.join(methods)}）"
+    est = sc.get("estimates") or {}
+    if step not in est:
+        raise RkError(f"STEP '{step}' は session.estimates にありません（有効値: {', '.join(est)}）。")
+    return int(est.get(step) or 0), "session.estimates"
+
+
 def cmd_budget(root: Path, args: argparse.Namespace) -> int:
     """次の工程に、今のセッションの Web 検索の残りが足りるかを判定する。
 
+    見積もりは --need、RQ の plan.md の「検索数の見積もり」（--rq のとき）、手法ごとの既定（session.estimates_by_method。
+    RQ の概要の **手法**）、session.estimates の順に決める。--step Q11 は、5 軸レビューの 2 回分（Q11 と Q12）の合計を見る。
     終了コード: 0 = OK（続けてよい）または UNMETERED（数えられない環境）、4 = STOP（工程の区切りで止まる）
     """
     cfg = rklib.load_config(root)
     sc = cfg.get("session") or {}
     limit = int(sc.get("web_search_limit") or 200)
     reserve = int(sc.get("reserve") or 0)
-    est = sc.get("estimates") or {}
+    plan_est: dict[str, int] = {}
+    methods: list[str] = []
+    rq_line = ""
+    if args.rq:
+        name, question, plan = find_rq_files(root, cfg, args.rq)
+        plan_est = plan_estimates(plan) if plan else {}
+        methods = rq_methods(question)
+        rq_line = f"{name}（plan.md: {rel(root, plan) if plan else 'なし'}、手法: {', '.join(methods) or '-'}）"
+    detail = ""
     if args.need is not None:
-        need = args.need
+        need, source = args.need, "--need"
     elif args.step:
-        if args.step not in est:
-            raise RkError(f"STEP '{args.step}' は session.estimates にありません（有効値: {', '.join(est)}）。")
-        need = int(est.get(args.step) or 0)
+        if args.step == "Q11":
+            n11, s11 = estimate("Q11", cfg, plan_est, methods)
+            n12, s12 = estimate("Q12", cfg, plan_est, methods)
+            need, source = n11 + n12, s11 if s11 == s12 else f"{s11} / {s12}"
+            detail = f"（Q11 {n11} + Q12 {n12}）"
+        elif args.step in RQ_STEPS:
+            need, source = estimate(args.step, cfg, plan_est, methods)
+        else:
+            need, source = estimate(args.step, cfg, {}, [])
     else:
-        need = 0
+        need, source = 0, "-"
     unmetered = sc.get("rqs_unmetered", 1)
     u = current_usage(root)
     out(f"STEP: {args.step or '-'}")
-    out(f"NEED: {need}")
+    if rq_line:
+        out(f"RQ: {rq_line}")
+    out(f"NEED: {need}{detail}")
+    out(f"SOURCE: {source}")
     out(f"LIMIT: {limit}（reserve {reserve}）")
     if u is None:
         settings = root / ".claude" / "settings.json"
@@ -869,6 +967,7 @@ def main(argv: list[str] | None = None) -> int:
     g = p.add_mutually_exclusive_group()
     g.add_argument("--step")
     g.add_argument("--need", type=int)
+    p.add_argument("--rq", help="RQ（番号か名前）。plan.md の見積もりと RQ の手法の既定を使う")
     p = sub.add_parser("hooks", help="Web 検索の回数を数えるフックを登録する")
     p.add_argument("action", choices=["install"])
     p = sub.add_parser("sources", help="出典 ID の払い出しと一覧")

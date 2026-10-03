@@ -48,7 +48,13 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "session": {
         "web_search_limit": 200,
         "reserve": 10,
-        "estimates": {"R2": 60, "R6": 30, "Q8": 60, "Q11": 30, "rq": 100},
+        "estimates": {"R2": 60, "R6": 30, "Q8": 60, "Q11": 30, "Q12": 15, "rq": 100},
+        "estimates_by_method": {
+            "data": {"Q8": 20, "Q11": 20, "Q12": 15, "rq": 50},
+            "desk": {"Q8": 30, "Q11": 20, "Q12": 15, "rq": 70},
+            "literature": {"Q8": 60, "Q11": 30, "Q12": 15, "rq": 120},
+            "qualitative": {"Q8": 15, "Q11": 20, "Q12": 15, "rq": 50},
+        },
         "stop_after_bootstrap": True,
         "rqs_unmetered": 1,
     },

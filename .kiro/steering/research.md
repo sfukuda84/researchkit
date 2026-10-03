@@ -165,7 +165,7 @@ ID は振り直さない。取り下げたものも消さずに印を付ける�
 Web 検索には 1 セッションあたりの回数の上限がある（Claude Code で観測した値は 200 件）。調査は検索が多いので、セッションを工程の境目で区切る。
 
 - **必ず区切る**: 調査全体の工程（R12）の後。新しいセッションで `researchkit-all` を始める。
-- **回数を数えて区切る**: プロジェクトを作るときに `.claude/settings.json` にフックが入り、セッションごとの Web 検索の回数を `.researchkit/usage/` に記録する。次の場所で `$RK budget --step <STEP>` を実行する: R2・R6 の前、RQ に入る前（`--step rq`）、Q8・Q11 の前。`VERDICT: STOP`（終了コード 4）なら、その工程に入らずに止まる。自動モードでも止まる。これは失敗ではなく区切りであり、新しいセッションで同じスキルを同じ引数で実行すれば続きから再開する。
+- **回数を数えて区切る**: プロジェクトを作るときに `.claude/settings.json` にフックが入り、セッションごとの Web 検索の回数を `.researchkit/usage/` に記録する。次の場所で `$RK budget --step <STEP>` を実行する: R2・R6 の前、RQ に入る前（`--step rq --rq <RQ>`）、Q8・Q11 の前（`--rq <RQ>` を付ける。Q11 は Q12 の分も含めて見る）。見積もりは、RQ の `plan.md` の「検索数の見積もり」、なければ手法ごとの既定（`session.estimates_by_method`）、なければ `session.estimates` を使う。`VERDICT: STOP`（終了コード 4）なら、その工程に入らずに止まる。自動モードでも止まる。これは失敗ではなく区切りであり、新しいセッションで同じスキルを同じ引数で実行すれば続きから再開する。
 - **数えられない環境**（`VERDICT: UNMETERED`）では、1 セッションで `session.rqs_unmetered`（既定 1）件の RQ を終えたら止まる。記録が別のセッションのもの（プロジェクトの外で Claude Code を起動したなど）のときも `UNMETERED` になる。Claude Code はプロジェクトのルートで起動する。
 - 見積もりは `.researchkit/config.yaml` の `session.estimates` で変える。
 

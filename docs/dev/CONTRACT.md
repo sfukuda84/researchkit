@@ -23,7 +23,7 @@ scaffold の開発用の文書である（新規プロジェクトには持ち�
 | `handover [--note <text>]` | 引き継ぎ書を更新する（gamekit と同じ。`CURRENT_STATE.md` の自動の節、`sessions/`）。コミットしない |
 | `doctor` | 設定、リンク、steering、`commands.analysis` の有無、フックの有無を診断。`OK`/`WARN`/`ERROR` と `SUMMARY`。ERROR で終了コード 1 |
 | `pitfall <text>` | `PITFALLS.md` の先頭に日付つきで足す |
-| `budget [--step <STEP> \| --need <N>]` | novelkit と同じ。`USED`、`LIMIT`、`NEED`、`REMAINING`、`VERDICT: OK\|STOP\|UNMETERED`。STOP は終了コード 4。`STEP` は `session.estimates` のキー（`R2`、`R6`、`Q8`、`Q11`、`rq`）。環境変数 `CLAUDE_CODE_SESSION_ID` があれば、そのセッションの記録を読む。記録が別のセッションのものなら `VERDICT: UNMETERED` と `RECORDED_SESSION: <ID>（更新 <日時>）` |
+| `budget [--step <STEP> \| --need <N>] [--rq <RQ>]` | novelkit と同じ。`USED`、`LIMIT`、`NEED`、`SOURCE`、`REMAINING`、`VERDICT: OK\|STOP\|UNMETERED`。STOP は終了コード 4。`STEP` は `session.estimates` のキー（`R2`、`R6`、`Q8`、`Q11`、`Q12`、`rq`）。`NEED` は `--need`、`--rq` のときの `plan.md` の「検索数の見積もり」（WebSearch の値、幅なら上限）、`session.estimates_by_method`（RQ の `**手法**` のうち最大）、`session.estimates` の順に決め、`SOURCE` に出どころを出す。`--step Q11` は Q11 と Q12 の合計（`NEED: 40（Q11 25 + Q12 15）`）。環境変数 `CLAUDE_CODE_SESSION_ID` があれば、そのセッションの記録を読む。記録が別のセッションのものなら `VERDICT: UNMETERED` と `RECORDED_SESSION: <ID>（更新 <日時>）` |
 | `hooks install` | `.claude/settings.json` に、Web 検索の回数を数えるフック（`count_search.py`）を登録する。既存の設定は保つ |
 | `sources next <NNN> [--count <k>]` | RQ `<NNN>` の次の空き出典 ID を `k` 個出す（既定 1）。`sources/` の作業ツリーと `main` の両方を見て、使われている最大の連番の次から出す |
 | `sources list [--grade A,B] [--rq <NNN>] [--unused]` | 出典の一覧（ID、等級、種類、題名、使った RQ） |

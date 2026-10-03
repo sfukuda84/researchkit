@@ -295,6 +295,43 @@ class ResearchkitStatusTest(unittest.TestCase):
         self.assertIn("USED: WebSearch 1", proc.stdout)
         self.assertIn("VERDICT: OK", proc.stdout)
 
+    def test_budget_estimates_from_plan_and_methods(self) -> None:
+        self.init_project()
+        q = self.repo / "docs" / "questions"
+        q.mkdir(parents=True, exist_ok=True)
+        (q / "003-volume.md").write_text("# 003\n\n**状態**: 未着手 | **手法**: data, desk | **依存**: 000\n", encoding="utf-8")
+        (q / "005-growth.md").write_text("# 005\n\n**状態**: 未着手 | **手法**: desk, literature\n", encoding="utf-8")
+        # plan.md がない RQ は、手法の既定のうち最大（desk の Q8 30、literature の rq 120）
+        out = self.out("budget", "--step", "Q8", "--rq", "3")
+        self.assertIn("NEED: 30", out)
+        self.assertIn("SOURCE: estimates_by_method（data, desk）", out)
+        self.assertIn("NEED: 120", self.out("budget", "--step", "rq", "--rq", "005"))
+        # worktree の中の plan.md を、メインの作業ツリーから読む。WebSearch の値（幅なら上限）を使う
+        self.commit_all("q")
+        wt = self.repo / ".worktrees" / "003-volume"
+        self.git("worktree", "add", "-q", "-b", "rq/003-volume", str(wt), "main")
+        plan = wt / "studies" / "003-volume" / "plan.md"
+        plan.parent.mkdir(parents=True)
+        plan.write_text("# 計画\n\n## 検索数の見積もり\n\n| ステップ | 見積もり（件） | 既定 | 判定 |\n|---|---|---|---|\n"
+                        "| Q8 収集 | 15〜28（WebSearch 12〜20、WebFetch 3〜8） | 30 | 収まる |\n"
+                        "| Q11 レビュー 1 回目 | 8〜15 | 20 | 収まる |\n", encoding="utf-8")
+        out = self.out("budget", "--step", "Q8", "--rq", "003-volume")
+        self.assertIn("NEED: 20", out)
+        self.assertIn("SOURCE: plan.md", out)
+        self.assertIn("plan.md: .worktrees/003-volume/studies/003-volume/plan.md", out)
+        # Q11 は Q12 の分を足す（Q12 は plan にないので手法の既定 15）
+        out = self.out("budget", "--step", "Q11", "--rq", "3", cwd=wt)
+        self.assertIn("NEED: 30（Q11 15 + Q12 15）", out)
+        self.assertIn("SOURCE: plan.md / estimates_by_method（data, desk）", out)
+        # --rq がなければ session.estimates（Q11 30 + Q12 15）。R2 は --rq があっても session.estimates
+        self.assertIn("NEED: 45（Q11 30 + Q12 15）", self.out("budget", "--step", "Q11"))
+        out = self.out("budget", "--step", "R2", "--rq", "3")
+        self.assertIn("NEED: 60", out)
+        self.assertIn("SOURCE: session.estimates", out)
+        # --need が最優先。ない RQ はエラー
+        self.assertIn("SOURCE: --need", self.out("budget", "--need", "7", "--rq", "3"))
+        self.assertEqual(self.rk("budget", "--step", "Q8", "--rq", "9").returncode, 1)
+
     def test_data_add(self) -> None:
         self.init_project()
         tpl = SKILLS / "researchkit-foundation" / "templates" / "manifest.md"
@@ -399,6 +436,7 @@ class RklibTest(unittest.TestCase):
         self.assertEqual(set(cfg["paths"]), set(self.rklib.DEFAULT_CONFIG["paths"]))
         self.assertEqual(cfg["paths"], self.rklib.DEFAULT_CONFIG["paths"])
         self.assertEqual(cfg["session"]["estimates"], self.rklib.DEFAULT_CONFIG["session"]["estimates"])
+        self.assertEqual(cfg["session"]["estimates_by_method"], self.rklib.DEFAULT_CONFIG["session"]["estimates_by_method"])
         self.assertEqual(cfg["subagents"], self.rklib.DEFAULT_CONFIG["subagents"])
         self.assertEqual(cfg["output"], self.rklib.DEFAULT_CONFIG["output"])
         self.assertEqual(cfg["confidence"]["levels"], ["確実", "可能性が高い", "示唆", "不明"])
