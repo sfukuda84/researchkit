@@ -422,6 +422,39 @@ class ResearchkitStatusTest(unittest.TestCase):
         (wt / "studies" / "003-volume" / "tasks.md").write_text("- [x] T001\n- [x] T002\n- [x] T003\n", encoding="utf-8")
         self.assertIn("## タスク（完了 3、未完了 0）", self.out("brief", "003"))
 
+    def test_usage_report(self) -> None:
+        self.init_project()
+        self.git("commit", "-q", "--allow-empty", "-m", "docs(003-x): 収集",
+                 "-m", "Researchkit-Step: Q8\nResearchkit-Question: 003-x")
+        t8 = int(self.git("log", "-1", "--format=%ct"))
+        self.env["GIT_COMMITTER_DATE"] = f"@{t8 + 100} +0000"
+        self.git("commit", "-q", "--allow-empty", "-m", "docs(003-x): 分析",
+                 "-m", "Researchkit-Step: Q9\nResearchkit-Question: 003-x")
+        self.env.pop("GIT_COMMITTER_DATE")
+        import datetime as _dt
+
+        def iso(t: int) -> str:
+            return _dt.datetime.fromtimestamp(t, _dt.timezone.utc).isoformat().replace("+00:00", "Z")
+
+        def msg(t: int, mid: str, ctx: int, tool: str = "") -> str:
+            content = [{"type": "tool_use", "id": f"tu-{mid}", "name": tool, "input": {}}] if tool else []
+            return json.dumps({"type": "assistant", "timestamp": iso(t), "message": {
+                "id": mid, "model": "claude-x", "content": content,
+                "usage": {"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": ctx, "output_tokens": 10}}})
+
+        sess = self.tmp / "s1.jsonl"
+        sess.write_text("\n".join([msg(t8 - 50, "a", 100_000, "WebSearch"), msg(t8 - 40, "a", 100_000),  # 同じ ID は 1 回
+                                   msg(t8 + 50, "b", 300_000)]) + "\n", encoding="utf-8")
+        sub = self.tmp / "s1" / "subagents"
+        sub.mkdir(parents=True)
+        (sub / "agent-1.jsonl").write_text(msg(t8 - 30, "c", 50_000) + "\n", encoding="utf-8")
+        proc = subprocess.run([sys.executable, str(SKILLS / "rk"), "usage", "--session", str(sess), "--rq", "003"],
+                              cwd=self.repo, env=self.env, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("| 003 | Q8 | 親 | 1 | 0.1 | 100 | 0 | 1 |", proc.stdout)
+        self.assertIn("| 003 | Q8 | 子 | 1 | 0.1 | 50 | 0 | 0 |", proc.stdout)
+        self.assertIn("| 003 | Q9 | 親 | 1 | 0.3 | 300 | 0 | 0 |", proc.stdout)
+
     def test_data_add(self) -> None:
         self.init_project()
         tpl = SKILLS / "researchkit-foundation" / "templates" / "manifest.md"
