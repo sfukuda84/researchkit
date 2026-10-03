@@ -126,6 +126,7 @@ gamekit の `worktree_helper.py` を移植する。違いだけを書く。
 - `check.py [--root R] [--rq <NNN>|--all] [--file <path>] [--online] [--strict]`: 出典の参照の検証。
   - ERROR: 主張の根拠の欄に、存在しない出典 ID・主張 ID がある。根拠の欄が空。根拠が `min_grade` 未満の等級の出典だけ。出典ファイルの必須項目（`id`、`type`、`title`、`accessed`、`grade`、`url` か `doi` か書誌（`author`＋`publisher`）のどれか）が欠けている。`id` とファイル名が一致しない。確度の値が `confidence.levels` にない。
   - WARN: 使われていない出典。`used_in` と実際の参照の食い違い。DOI の書式の誤り。参照日が 1 年以上前。`grade: D` の出典がある。
+  - ERROR: 主張の欄の数値が `{N:…#exploratory.…}`（探索的な分析の出力）を参照しているのに、確度が `confidence.levels` の下から 2 つでない（`EXPLORATORY_CONFIDENCE`）。
   - ERROR（データの目録。`--rq` と `--all`）: `data/raw/` にあるのに `data/manifest.md` の「ファイル」の表にない（`UNLISTED_DATA`）。目録の raw の行のファイルがない（`MISSING_DATA`）。目録の SHA-256 と中身が違う（`HASH_MISMATCH`）。`data/raw/` にファイルがあるのに目録がない（`NO_MANIFEST`）。`--rq` では「使った RQ」にその番号がある行だけを照らす（目録にないファイルは常に出す）。`data/large/` の行は手元になくてよい。
   - `--online`: URL（HEAD、だめなら GET）と DOI（`https://doi.org/<doi>`）の到達性。失敗は WARN。
   - 出力: 1 行 1 件 `ERROR|WARN <file>:<line> <code> <説明>` と、最後に `SUMMARY: errors=<n> warnings=<n>`。エラーがあれば終了コード 1。
