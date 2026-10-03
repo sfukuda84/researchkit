@@ -11,6 +11,7 @@
   skills/researchkit/rk check [...]             check.py（出典の参照、出典台帳、データの目録）
   skills/researchkit/rk num [...]               numbers.py（数値の突き合わせ）
   skills/researchkit/rk validate [...]          validate.py（RQ 一式の検証）
+  skills/researchkit/rk usage --session <jsonl>  usage_report.py（セッションの記録から RQ・ステップごとの利用量を集計する）
 Windows では `py -3 skills/researchkit/rk ...` と書く（先頭行の python3 の指定が効かないため）。
 呼ばれた場所の skills/researchkit/ のスクリプトを使う（worktree の中なら worktree のもの）。終了コードはそのまま返す。
 標準ライブラリだけで書く（Python 3.9 以上）。
@@ -28,6 +29,7 @@ TOOLS = {
     "check": HERE / "researchkit-check" / "scripts" / "check.py",
     "num": HERE / "researchkit-check" / "scripts" / "numbers.py",
     "validate": HERE / "researchkit-questions" / "scripts" / "validate.py",
+    "usage": HERE / "researchkit-status" / "scripts" / "usage_report.py",
 }
 DEFAULT = HERE / "researchkit-status" / "scripts" / "researchkit.py"
 
