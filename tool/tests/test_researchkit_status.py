@@ -190,6 +190,41 @@ class ResearchkitStatusTest(unittest.TestCase):
         self.assertEqual(len(list((self.repo / "docs" / "handover" / "sessions").glob("*.md"))), 2)
         self.assertIn("（コミット）", self.out("status"))
 
+    def test_handover_detects_stale_manual_sections(self) -> None:
+        self.init_project()
+        q = self.repo / "docs" / "questions"
+        q.mkdir(parents=True, exist_ok=True)
+        (q / "002-farmer-decline.md").write_text("# 002\n\n**状態**: 人の作業待ち | **手法**: data\n", encoding="utf-8")
+        current = self.repo / "docs" / "handover" / "CURRENT_STATE.md"
+        self.out("handover")
+        text = current.read_text(encoding="utf-8")
+        self.assertIn("### 次の候補（自動）", text)
+        self.assertIn("- 次の RQ:", text)
+        self.assertRegex(text, r"<!-- manual: hash=[0-9a-f]{16} since=[0-9a-f]+ -->")
+        current.write_text(text.replace("<この調査で今いちばん進めたいこと。決定（D1 など）と RQ の番号で書く>",
+                                        "002-farmer-decline を進める"), encoding="utf-8")
+        self.commit_all("handover")
+        # 手で書く節を変えたら、その時点から数える（マージがなければ警告しない）
+        out = self.out("handover")
+        self.assertNotIn("STALE_MANUAL", out)
+        text = current.read_text(encoding="utf-8")
+        self.assertIn("手で書く節が挙げる RQ と今の状態**: 002-farmer-decline（人の作業待ち）", text)
+        self.commit_all("handover2")
+        # 手で書く節が変わらないまま RQ のマージがあると警告する。直すまで警告は続く
+        self.git("commit", "-q", "--allow-empty", "-m", "merge(002-farmer-decline): all")
+        out = self.out("handover")
+        self.assertIn("WARN STALE_MANUAL", out)
+        self.assertIn("002-farmer-decline のマージより前から", out)
+        self.assertIn("（`STALE_MANUAL`）", current.read_text(encoding="utf-8"))
+        self.commit_all("handover3")
+        self.assertIn("WARN STALE_MANUAL", self.out("handover"))
+        # 直すと消える
+        text = current.read_text(encoding="utf-8")
+        current.write_text(text.replace("002-farmer-decline を進める", "003 を進める"), encoding="utf-8")
+        out = self.out("handover")
+        self.assertNotIn("STALE_MANUAL", out)
+        self.assertNotIn("（`STALE_MANUAL`）", current.read_text(encoding="utf-8"))
+
     def test_pitfall_adds_entry_on_top(self) -> None:
         self.init_project()
         self.assertIn("ADDED: docs/handover/PITFALLS.md", self.out("pitfall", "古い統計を使った"))

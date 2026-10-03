@@ -111,7 +111,10 @@ class WorktreeHelperScenario(unittest.TestCase):
         self.study_files(wt, name, tasks)
         (wt / "studies" / name / "findings.md").write_text("f\n", encoding="utf-8")
         self.checkpoints(rq, f"{DESIGN} {EXECUTE}")
-        return self.out("finish", rq, "--phase", "all")
+        out = self.out("finish", rq, "--phase", "all")
+        if "FINISHED:" in out:
+            self.assertIn("HANDOVER: 引き継ぎ書を更新し", out)
+        return out
 
     # --- scenario --------------------------------------------------------
     def test_resolve_list_and_order(self) -> None:
