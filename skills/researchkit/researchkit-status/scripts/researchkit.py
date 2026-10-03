@@ -314,7 +314,88 @@ def commits_since_handover(root: Path, cfg: dict) -> list[str]:
     return [l for l in proc.stdout.splitlines() if l.strip()] if proc.returncode == 0 else []
 
 
-def build_state(root: Path, cfg: dict, now: dt.datetime) -> str:
+MANUAL_MARK_RE = re.compile(r"<!-- manual: hash=([0-9a-f]+) since=([0-9a-f]+) -->")
+RQ_NAME_RE = re.compile(r"\b(\d{3}-[a-z0-9][a-z0-9-]*[a-z0-9])\b")
+MERGE_SUBJECT_RE = re.compile(r"^merge\(([^)]+)\):")
+
+
+def manual_part(text: str) -> str:
+    """手で書く節（自動の節の印より前）。前後の空白の違いは無視する。"""
+    start = re.search(rf"^{re.escape(AUTO_START)}[ \t]*$", text, re.MULTILINE)
+    body = text[: start.start()] if start else text
+    body = re.sub(r"^## 自動で更新する節\s*$", "", body, flags=re.MULTILINE)
+    return "\n".join(l.rstrip() for l in body.strip().splitlines())
+
+
+def rq_status(root: Path, cfg: dict, name: str) -> str:
+    path = rklib.pth(root, cfg, "questions") / f"{name}.md"
+    if not path.exists():
+        return ""
+    m = re.search(r"\*\*状態\*\*[:：]\s*([^|\n]+)", path.read_text(encoding="utf-8"))
+    return m.group(1).strip() if m else ""
+
+
+def manual_check(root: Path, cfg: dict, old_text: str) -> tuple[list[str], list[str], str]:
+    """手で書く節が古くなっていないかを点検する。(警告の行, 点検の節の行, 次に残す印) を返す。
+
+    印には、手で書く節のハッシュと、その内容になった時点のコミット（since）を残す。内容が変わっていなければ since を
+    動かさず、since より後に RQ のマージ（merge(<RQ>): ...）があれば STALE_MANUAL にする。
+    """
+    manual = manual_part(old_text)
+    digest = hashlib.sha256(manual.encode("utf-8")).hexdigest()[:16]
+    head = ""
+    if rklib.is_git_repo(root):
+        head = rklib.git(root, ["rev-parse", "--short=12", "HEAD"], check=False).stdout.strip()
+    prev = MANUAL_MARK_RE.search(old_text)
+    since = prev.group(2) if prev and prev.group(1) == digest else head
+    warns: list[str] = []
+    merged: list[str] = []
+    if since and head and since != head:
+        log = rklib.git(root, ["log", "--format=%s", f"{since}..HEAD"], check=False)
+        if log.returncode == 0:
+            for subj in log.stdout.splitlines():
+                m = MERGE_SUBJECT_RE.match(subj)
+                if m and m.group(1) not in merged:
+                    merged.append(m.group(1))
+    section = []
+    if merged:
+        names = "・".join(reversed(merged))
+        warns.append(f"WARN STALE_MANUAL: 手で書く節（今の目標・次にやること・判断待ち）が、{names} のマージより前から変わっていない。"
+                     "今の状態に合わせて直してからコミットする")
+        section.append(f"- **注意**: 手で書く節が {names} のマージより前から変わっていない（`STALE_MANUAL`）。上の「次にやること」と「判断待ち」を確かめる")
+    mentioned = list(dict.fromkeys(RQ_NAME_RE.findall(manual)))
+    shown = [f"{n}（{rq_status(root, cfg, n)}）" for n in mentioned if rq_status(root, cfg, n)]
+    if shown:
+        section.append(f"- **手で書く節が挙げる RQ と今の状態**: {'、'.join(shown)}")
+    mark = f"<!-- manual: hash={digest} since={since or '0'} -->" if since else f"<!-- manual: hash={digest} since=0 -->"
+    return warns, section, mark
+
+
+def next_candidates(root: Path, cfg: dict, decisions: list[str]) -> list[str]:
+    """次の一手の候補（自動）: 次の RQ、残っている [人] のタスクの件数、見直しの優先度が「高」の判断の件数。"""
+    lines: list[str] = []
+    code, nxt = run_helper(root, "next", "--phase", "all")
+    nxt = nxt.strip().splitlines()[-1].strip() if code == 0 and nxt.strip() else ""
+    if nxt:
+        lines.append(f"- 次の RQ: `/researchkit-all {nxt}`（`$HELPER next --phase all` の結果）")
+    else:
+        lines.append("- 次の RQ: なし（すべての RQ が完了か人の作業待ち。999 も済んでいれば、報告書のレビューか公開）")
+    _, human = run_helper(root, "human-tasks")
+    counts: dict[str, int] = {}
+    current = ""
+    for line in human.splitlines():
+        if line and not line.startswith(" ") and line.rstrip().endswith(":"):
+            current = line.rstrip()[:-1]
+        elif line.strip().startswith("- [ ]") and current:
+            counts[current] = counts.get(current, 0) + 1
+    if counts:
+        lines.append("- 残っている人のタスク: " + "、".join(f"{k} {v} 件" for k, v in counts.items()))
+    if decisions:
+        lines.append(f"- 見直しの優先度が「高」の自動判断: {len(decisions)} 件（下の一覧）")
+    return lines
+
+
+def build_state(root: Path, cfg: dict, now: dt.datetime, manual: list[str] | None = None) -> str:
     lines: list[str] = []
     branch, head = "-", "-"
     if rklib.is_git_repo(root):
@@ -325,12 +406,16 @@ def build_state(root: Path, cfg: dict, now: dt.datetime) -> str:
               f"- **調査全体の工程**: 完了 {' '.join(done) or 'なし'} / 次 {nxt}",
               f"- **出典台帳**: {sources_line(root, cfg)}",
               f"- **Web 検索**: {budget_line(root, cfg)}",
-              "", "### RQ", ""]
+              "", "### 次の候補（自動）", ""]
+    decisions = high_priority_decisions(root, cfg)
+    lines += next_candidates(root, cfg, decisions)
+    if manual:
+        lines += ["", "### 手で書く節の点検", ""] + manual
+    lines += ["", "### RQ", ""]
     _, status = run_helper(root, "status")
     lines += [status or "（RQ なし）", "", "### 残っている人のタスク（[人]）", ""]
     _, human = run_helper(root, "human-tasks")
     lines += [human or "（なし）", "", "### 見直しの優先度が「高」の自動判断", ""]
-    decisions = high_priority_decisions(root, cfg)
     lines += [f"- {d}" for d in decisions] or ["（なし）"]
     lines += ["", "### 未決事項（[NEEDS CLARIFICATION]）", ""]
     todo = open_clarifications(root, cfg)
@@ -344,13 +429,14 @@ def build_state(root: Path, cfg: dict, now: dt.datetime) -> str:
 def cmd_handover(root: Path, args: argparse.Namespace) -> int:
     cfg = rklib.load_config(root)
     now = dt.datetime.now()
-    state = build_state(root, cfg, now)
     handover = rklib.pth(root, cfg, "handover")
     handover.mkdir(parents=True, exist_ok=True)
     current = handover / "CURRENT_STATE.md"
     text = (current.read_text(encoding="utf-8") if current.exists()
             else (TEMPLATES / "CURRENT_STATE.md").read_text(encoding="utf-8"))
-    block = f"{AUTO_START}\n{state}\n{AUTO_END}"
+    warns, manual, mark = manual_check(root, cfg, text)
+    state = build_state(root, cfg, now, manual)
+    block = f"{AUTO_START}\n{state}\n{mark}\n{AUTO_END}" if mark else f"{AUTO_START}\n{state}\n{AUTO_END}"
     # 印は単独の行だけを数える（本文の説明に印の文字列が出てきても取り違えない）
     start = re.search(rf"^{re.escape(AUTO_START)}[ \t]*$", text, re.MULTILINE)
     end = re.search(rf"^{re.escape(AUTO_END)}[ \t]*$", text, re.MULTILINE)
@@ -379,6 +465,8 @@ def cmd_handover(root: Path, args: argparse.Namespace) -> int:
         gk.unlink()
     out(f"UPDATED: {rel(root, current)}")
     out(f"CREATED: {rel(root, session)}")
+    for w in warns:
+        out(w)
     return 0
 
 

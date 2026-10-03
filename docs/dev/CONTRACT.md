@@ -20,7 +20,7 @@ scaffold の開発用の文書である（新規プロジェクトには持ち�
 | `config get <key.path>` | 値を 1 行で出す。なければ空行と終了コード 1。リストは `,` 区切り |
 | `bootstrap` | `COMPLETED_STEPS: R1 R2 ...` と `NEXT_STEP: R<n>`（すべて済めば `DONE`）。trailer `Researchkit-Bootstrap: R<n>` から判定 |
 | `status` | 調査全体の工程、RQ の一覧（`worktree_helper.py status` の出力を取り込む）、引き継ぎ書の最終更新、出典の件数（等級別） |
-| `handover [--note <text>]` | 引き継ぎ書を更新する（gamekit と同じ。`CURRENT_STATE.md` の自動の節、`sessions/`）。コミットしない |
+| `handover [--note <text>]` | 引き継ぎ書を更新する（gamekit と同じ。`CURRENT_STATE.md` の自動の節、`sessions/`）。コミットしない。自動の節に「次の候補（自動）」（`worktree_helper.py next --phase all`、`[人]` のタスクの件数、優先度「高」の判断の件数）と「手で書く節の点検」を書く。手で書く節のハッシュとその時点のコミットを印 `<!-- manual: hash=<16 桁> since=<コミット> -->` で残し、手で書く節が変わらないまま `merge(<RQ>): …` のコミットがあれば `WARN STALE_MANUAL: …` を出す（終了コードは 0） |
 | `doctor` | 設定、リンク、steering、`commands.analysis` の有無、フックの有無を診断。`OK`/`WARN`/`ERROR` と `SUMMARY`。ERROR で終了コード 1 |
 | `pitfall <text>` | `PITFALLS.md` の先頭に日付つきで足す |
 | `budget [--step <STEP> \| --need <N>] [--rq <RQ>]` | novelkit と同じ。`USED`、`LIMIT`、`NEED`、`SOURCE`、`REMAINING`、`VERDICT: OK\|STOP\|UNMETERED`。STOP は終了コード 4。`STEP` は `session.estimates` のキー（`R2`、`R6`、`Q8`、`Q11`、`Q12`、`rq`）。`NEED` は `--need`、`--rq` のときの `plan.md` の「検索数の見積もり」（WebSearch の値、幅なら上限）、`session.estimates_by_method`（RQ の `**手法**` のうち最大）、`session.estimates` の順に決め、`SOURCE` に出どころを出す。`--step Q11` は Q11 と Q12 の合計（`NEED: 40（Q11 25 + Q12 15）`）。環境変数 `CLAUDE_CODE_SESSION_ID` があれば、そのセッションの記録を読む。記録が別のセッションのものなら `VERDICT: UNMETERED` と `RECORDED_SESSION: <ID>（更新 <日時>）` |
@@ -48,6 +48,7 @@ gamekit の `worktree_helper.py` を移植する。違いだけを書く。
 - 状態欄: `docs/questions/<NNN-name>.md` の `**状態**: <値> |`。値は `未着手`／`設計済み`／`完了`／`人の作業待ち`。`finish` が、design の後は `設計済み`、execute・all の後は `完了` か `人の作業待ち` にする。`docs/questions/README.md` の一覧の状態列も合わせる（gamekit と同じ）。
 - `999-research-report` の前提: `ensure 999-...` は、ほかのすべての RQ（`000` を含む）の状態が `完了` か `人の作業待ち` でなければ、`PRECONDITION: DEPENDENCY_PENDING` で終了コード 3。`next` は、ほかが終わるまで 999 を候補にしない。
 - `ensure` は、`WORKTREE_STATE` が `reused` か `reattached` のとき、どのステップのコミットにも入っていない変更があれば `UNCOMMITTED_CHANGES: <件数>`、そのうち `data/manifest.md` に行のない `data/raw/` のファイルがあれば `UNRECORDED_DATA: <件数>` と `  - <path>` の行（20 件まで）を出す。終了コードは変えない。
+- `finish` は成功したとき、最後に `HANDOVER: …` の行で、引き継ぎ書の更新と手で書く節の見直しを促す。
 - 前提条件のコード: `ALREADY_DESIGNED`、`ALREADY_EXECUTED`、`EXECUTE_IN_PROGRESS`、`DESIGN_INCOMPLETE`、`DESIGN_MISSING`、`LEFTOVER_CHANGES`、`NOT_ON_MAIN`、`UNCHECKED_TASKS`、`DEPENDENCY_PENDING`。
 - コマンド: `ensure`、`state`、`checkpoint`、`finish`、`abort`、`list`、`status`、`human-tasks`、`sync-status`、`next`、`resolve`（gamekit と同じ意味）。`ensure` と `state` の出力の項目名は `RQ_NAME`（gamekit の `FEATURE_NAME`）以外は gamekit と同じ。
 - 着手順は `docs/questions/spec_order.md` の並び、その後に番号順。

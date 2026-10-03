@@ -829,6 +829,8 @@ def cmd_finish(args: list[str]) -> None:
         print(f"HUMAN_TASKS_PENDING: {len(human_pending)}")
         for line in human_pending:
             print(f"  {line}")
+    print("HANDOVER: 引き継ぎ書を更新し（researchkit.py handover）、手で書く節（今の目標・次にやること・判断待ち）を"
+          f"今の状態に合わせて直してからコミットする（{name} の完了を反映する）")
 
 
 def cmd_abort(args: list[str]) -> None:
