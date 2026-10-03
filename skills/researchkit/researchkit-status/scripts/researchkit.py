@@ -13,6 +13,7 @@
   python3 researchkit.py [--root <dir>] hooks install
   python3 researchkit.py [--root <dir>] sources next <NNN> [--count <k>]
   python3 researchkit.py [--root <dir>] sources list [--grade A,B] [--rq <NNN>] [--unused]
+  python3 researchkit.py [--root <dir>] brief <RQ> [--width <n>] [--max-tasks <n>]
   python3 researchkit.py [--root <dir>] estat list <政府統計コード|一覧の URL> [--grep <語>]
   python3 researchkit.py [--root <dir>] estat get <statInfId> --kind <0|1|2|4> --out <保存先>
   python3 researchkit.py [--root <dir>] data add <file> --source <ID> --url <URL> --desc <内容> --rq <NNN> [--license <規約>] [--method <取得の方法>]
@@ -1027,6 +1028,111 @@ def cmd_data(root: Path, args: argparse.Namespace) -> int:
     return 0
 
 
+# ---------------------------------------------------------------- brief（RQ の要点）
+
+def study_dir(root: Path, cfg: dict, name: str) -> Path | None:
+    """RQ の成果物のディレクトリ。作業中の worktree を優先し、なければプロジェクトのルート・メインの作業ツリー。"""
+    srel = cfg["paths"]["studies"]
+    bases = list(dict.fromkeys([root, rklib.main_worktree(root)]))
+    cands = [b / ".worktrees" / name / srel / name for b in bases] + [b / srel / name for b in bases]
+    return next((c for c in cands if c.is_dir()), None)
+
+
+def md_section(text: str, title: str) -> str:
+    """見出しの文字が title で始まる節の中身（同じ深さ以上の次の見出しまで）。なければ空。"""
+    lines = text.splitlines()
+    for i, line in enumerate(lines):
+        m = re.match(r"^(#{1,6})\s+(.*)$", line)
+        if m and m.group(2).strip().startswith(title):
+            depth = len(m.group(1))
+            out = []
+            for nxt in lines[i + 1:]:
+                n = re.match(r"^(#{1,6})\s", nxt)
+                if n and len(n.group(1)) <= depth:
+                    break
+                out.append(nxt)
+            return "\n".join(out).strip()
+    return ""
+
+
+def clip(line: str, width: int) -> str:
+    line = line.rstrip()
+    return line if len(line) <= width else line[: width - 1] + "…"
+
+
+def brief_lines(body: str, width: int, keep=lambda l: True) -> list[str]:
+    """節の中身から、表の行・箇条書き・本文の行を、区切りの行とコメントを除いて短くする。"""
+    out, in_comment = [], False
+    for line in body.splitlines():
+        if line.strip().startswith("<!--"):
+            in_comment = "-->" not in line
+            continue
+        if in_comment:
+            in_comment = "-->" not in line
+            continue
+        if not line.strip() or re.fullmatch(r"\|?[\s:|-]+\|?", line.strip()) or line.startswith("#"):
+            continue
+        if keep(line):
+            out.append(clip(line, width))
+    return out
+
+
+def cmd_brief(root: Path, args: argparse.Namespace) -> int:
+    """RQ の要点（答えの形、判定の基準、仮説と反証条件、確度の付け方、検索数の見積もり、計画の変更、未完了のタスク）を短く出す。
+
+    spec.md・plan.md・tasks.md を全文で読む代わりに使う。全文が要る場面（確度を付ける、計画を直す）は、該当の節だけを読む。
+    """
+    cfg = rklib.load_config(root)
+    name, _question, _plan = find_rq_files(root, cfg, args.rq)
+    d = study_dir(root, cfg, name)
+    if d is None:
+        raise RkError(f"{name} の成果物のディレクトリがない（設計の前。docs/questions/{name}.md を読む）")
+    width = args.width
+    read = lambda f: (d / f).read_text(encoding="utf-8") if (d / f).is_file() else ""  # noqa: E731
+    spec, plan, tasks = read("spec.md"), read("plan.md"), read("tasks.md")
+    out(f"# {name}（{rel(root, d)}）")
+    parts = [
+        ("問い", spec, "問い", lambda l: not l.startswith("|")),
+        ("小問", spec, "小問", lambda l: True),
+        ("つながる決定", spec, "つながる決定", lambda l: l.startswith("- **")),
+        ("つながる仮説", spec, "つながる仮説", lambda l: l.startswith("- **")),
+        ("判定の基準", spec, "判定の基準", lambda l: True),
+        ("仮説と反証条件", plan, "仮説と反証条件", lambda l: l.startswith("|")),
+        ("確度の付け方", plan, "確度の付け方", lambda l: True),
+        ("検索数の見積もり", plan, "検索数の見積もり", lambda l: l.startswith("|")),
+        ("計画の変更", plan, "計画の変更", lambda l: l.startswith("|")),
+    ]
+    for label, text, title, keep in parts:
+        lines = brief_lines(md_section(text, title), width, keep) if text else []
+        if label == "問い":
+            lines = lines[:3]
+        if len(lines) == 1 and lines[0].startswith("|"):
+            lines = []  # 表の見出しの行だけ（中身がない）
+        if lines:
+            out("")
+            out(f"## {label}")
+            for line in lines:
+                out(line)
+    todo = [clip(l.strip(), width) for l in tasks.splitlines() if l.strip().startswith("- [ ]")]
+    done = sum(1 for l in tasks.splitlines() if l.strip().startswith("- [x]"))
+    out("")
+    out(f"## タスク（完了 {done}、未完了 {len(todo)}）")
+    for line in todo[: args.max_tasks]:
+        out(line)
+    if len(todo) > args.max_tasks:
+        out(f"- ほか {len(todo) - args.max_tasks} 件")
+    files = [f for f in ("findings.md", "search-log.md", "auto-decisions.md") if (d / f).is_file()]
+    outs = sorted(p.name for p in (d / "analysis" / "out").glob("*.json")) if (d / "analysis" / "out").is_dir() else []
+    reviews = sorted(p.name for p in (d / "reviews").glob("*.md")) if (d / "reviews").is_dir() else []
+    out("")
+    out("## 成果物")
+    out(f"- ファイル: {', '.join(files) or '（なし）'}")
+    out(f"- 分析の出力: {', '.join(outs) or '（なし）'}")
+    out(f"- 記録: {', '.join(reviews) or '（なし）'}")
+    out(f"- 全文: {rel(root, d)}/spec.md、plan.md、tasks.md（要る節だけを読む）")
+    return 0
+
+
 # ---------------------------------------------------------------- main
 
 def main(argv: list[str] | None = None) -> int:
@@ -1065,6 +1171,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--grade", default="")
     p.add_argument("--rq", dest="rq_filter", default="")
     p.add_argument("--unused", action="store_true")
+    p = sub.add_parser("brief", help="RQ の要点（spec・plan・tasks の要る節）を短く出す")
+    p.add_argument("rq", help="RQ（番号か名前）")
+    p.add_argument("--width", type=int, default=160, help="1 行の文字数の上限（既定 160）")
+    p.add_argument("--max-tasks", type=int, default=20, help="未完了のタスクを出す件数の上限（既定 20）")
     p = sub.add_parser("estat", help="e-Stat の一覧を短く表示する（list）、表を取得する（get）")
     p.add_argument("action", choices=["list", "get"])
     p.add_argument("target", nargs="?", help="list: 政府統計コード（8 桁）か一覧の URL / get: statInfId")
@@ -1088,7 +1198,7 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.root).expanduser().resolve() if args.root else rklib.find_root()
     handlers = {"init": cmd_init, "config": cmd_config, "bootstrap": cmd_bootstrap, "status": cmd_status,
                 "handover": cmd_handover, "doctor": cmd_doctor, "pitfall": cmd_pitfall, "budget": cmd_budget,
-                "hooks": cmd_hooks, "sources": cmd_sources, "estat": cmd_estat, "data": cmd_data}
+                "hooks": cmd_hooks, "sources": cmd_sources, "estat": cmd_estat, "data": cmd_data, "brief": cmd_brief}
     try:
         return handlers[args.cmd](root, args)
     except (RkError, rklib.YamlError, RuntimeError, ValueError, OSError) as e:

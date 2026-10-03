@@ -15,61 +15,13 @@ Claude Code、Codex CLI、Antigravity、Kiro CLI、opencode のいずれでも�
 
 ## 1. ヘルパースクリプト
 
-```bash
-skills/researchkit/rk helper <command> ...
-# 同じ: python3 <skills>/researchkit-worktree/scripts/worktree_helper.py <command> ...
-```
+`skills/researchkit/rk helper <command> ...`（以降 `$HELPER`。`python3 <skills>/researchkit-worktree/scripts/worktree_helper.py` と同じ）。プロジェクトのルートからでも worktree の中からでも動く。マージ先は環境変数 `RESEARCHKIT_MAIN_BRANCH`、なければ `main`。
 
-以降、この呼び出しを `$HELPER` と書く（steering の「エージェントの行動規範」と同じ。`rk` は 1 語で呼べる入口で、zsh でも変数に入れて使える）。`$RK`（`researchkit-status` の `researchkit.py`）の意味は steering の「エージェントの行動規範」のとおりである。
+- 主なコマンド: `ensure <RQ> --phase design|execute|all`（Q1）、`state`、`checkpoint <RQ> <step> "<subject>"`、`finish <RQ> --phase …`（Q13。worktree の外で）、`next --phase …`、`status`、`human-tasks [<RQ>]`、`sync-status <RQ>`、`abort <RQ> [--yes]`、`list`、`resolve`。`<RQ>` は番号・スラッグ・完全名・パスのどれでもよい。
+- `ensure`・`state` の出力: `REPO_ROOT`、`RQ_NAME`、`BRANCH`、`WORKTREE_DIR`、`WORKTREE_STATE`（created / reused / reattached / present / absent）、`PHASE`、`COMPLETED_STEPS`、`NEXT_STEP`。再利用したときは `UNCOMMITTED_CHANGES` と `UNRECORDED_DATA` も出る（『再開』）。
+- 終了コード 3 は前提条件を満たさない（標準エラーに `PRECONDITION: <code>`）。`ALREADY_DESIGNED`、`ALREADY_EXECUTED`、`EXECUTE_IN_PROGRESS`、`DESIGN_INCOMPLETE`、`DESIGN_MISSING`、`DEPENDENCY_PENDING`、`LEFTOVER_CHANGES`、`NOT_ON_MAIN`、`UNCHECKED_TASKS`。
 
-- `<skills>` は、このスキルが置かれた skills ディレクトリ（`.claude/skills`、`.agents/skills`、`.kiro/skills` のいずれか）である。
-- スクリプトは Python 3.9 以上の標準ライブラリだけで書かれており、macOS、Linux、Windows で動く。プロジェクトのルートからでも worktree の中からでも実行できる。`python3` がない環境では、`python` または `py -3` に読み替える。
-- マージ先のブランチ（この文書の `main`）は、環境変数 `RESEARCHKIT_MAIN_BRANCH` があればその名前、なければ `main` である。クラウドセッションでの扱いは §8 に書く。
-
-| コマンド | 用途 |
-|---|---|
-| `$HELPER ensure <RQ> --phase design\|execute\|all` | Q1 準備。worktree があれば再利用し、なければ `main` から作る |
-| `$HELPER state <RQ> --phase design\|execute\|all` | 変更せずに進捗を表示する |
-| `$HELPER checkpoint <RQ> <step> "<subject>"` | worktree の変更をすべてコミットし、ステップの完了を記録する |
-| `$HELPER finish <RQ> --phase design\|execute\|all [--allow-unchecked] [--commit-leftovers] [--switch]` | Q13 片付け。RQ の状態を更新し、`main` に `--no-ff` でマージし、worktree とブランチを削除する。worktree の外で実行する |
-| `$HELPER abort <RQ> [--yes]` | worktree とブランチを破棄する。`--yes` がなければ対象を表示するだけ |
-| `$HELPER list` | 全 RQ の名前を着手順（`docs/questions/spec_order.md` の並び、その後に番号順。`999` は常に最後）で表示する |
-| `$HELPER status` | 全 RQ の状態欄・設計・実行・worktree の状況と、残っている `[人]` のタスクの件数を表で表示する。`999` は、ほかが終わるまで「ほかの RQ の完了待ち」と出る |
-| `$HELPER human-tasks [<RQ>]` | 残っている `[人]` のタスクを一覧する。worktree があればその `tasks.md`、なければ `main` のもの（メインの作業ツリーが `main` にいれば、コミット前の変更も含む）を読む |
-| `$HELPER sync-status <RQ>` | `main` にマージ済みの RQ の状態欄を、`tasks.md` に合わせて `完了` か `人の作業待ち` にする。`main` で実行し、変更はコミットしない |
-| `$HELPER next --phase design\|execute\|all [--skip <RQ,...>]` | 次に着手すべき RQ を表示する（途中の worktree を優先。`--skip` で除外。`999` はほかが終わるまで出さない）。なければ空行 |
-| `$HELPER resolve <query>` | 番号（`1`、`003`）、スラッグ、完全名、ファイルパスから RQ の名前を決める |
-
-`<RQ>` には、番号（`1`、`003`）、スラッグ（`market-size`）、完全名（`003-market-size`）、パス（`docs/questions/003-market-size.md`）のどれを渡してもよい。
-
-`ensure` と `state` は次の形で結果を出力する。
-
-```text
-REPO_ROOT: /path/to/project
-RQ_NAME: 003-market-size
-BRANCH: rq/003-market-size
-WORKTREE_DIR: /path/to/project/.worktrees/003-market-size
-WORKTREE_STATE: created | reused | reattached | present | absent
-PHASE: design
-COMPLETED_STEPS: Q2 Q3
-NEXT_STEP: Q4
-```
-
-終了コードは、0 が成功、1 がエラー、3 が前提条件を満たさないことを表す。3 のときは標準エラーに `PRECONDITION: <code>` と案内文が出る。
-
-| code | 意味 | 対応 |
-|---|---|---|
-| `ALREADY_DESIGNED` | 設計（`tasks.md`）はすでに `main` にマージ済み | `researchkit-execute` を案内する |
-| `ALREADY_EXECUTED` | 実行まで `main` にマージ済み | その RQ は完了として扱う |
-| `EXECUTE_IN_PROGRESS` | worktree がすでに実行の工程に入っている | `researchkit-execute` か `researchkit-all` での再開を案内する |
-| `DESIGN_INCOMPLETE` | worktree の設計の工程が途中 | `researchkit-question` か `researchkit-all` での再開を案内する |
-| `DESIGN_MISSING` | `spec.md`・`plan.md`・`tasks.md` がどこにもない | `researchkit-question` か `researchkit-all` を案内する |
-| `DEPENDENCY_PENDING` | `999-research-report` を始めようとしたが、ほかの RQ（`000` を含む）に `完了` でも `人の作業待ち` でもないものがある | 残っている RQ を示し、先にそれらを進めるよう案内する |
-| `LEFTOVER_CHANGES` | `finish` で、worktree にどのステップのコミットにも含まれていない変更がある | 変更の一覧をユーザーに示す。マージに含めてよければ `--commit-leftovers` を付けて再実行する。含めない変更は、ユーザーの了承を得て取り除く |
-| `NOT_ON_MAIN` | `finish` で、メインの作業ツリーが `main` 以外のブランチにいる | 切り替えてよいかをユーザーに確認し、よければ `--switch` を付けて再実行する |
-| `UNCHECKED_TASKS` | `finish`（execute / all）で、`tasks.md` に `[人]` 以外の未完了のタスクが残っている | 一覧をユーザーに示す。片付けるなら該当するステップ（収集なら Q8、分析なら Q9 など）の手順で片付ける。残したままマージしてよいと確認できたら `--allow-unchecked` を付けて `finish` を再実行する |
-
-`finish`（execute / all）は、未完了のタスクが `[人]` のものだけなら止めずにマージし、標準出力に `HUMAN_TASKS_PENDING: <件数>` と残りのタスクを出す。この一覧はユーザーに示し、§3『人のタスクの片付け』を案内する。
+コマンドの表、出力の例、前提条件のコードごとの対応、`HUMAN_TASKS_PENDING` の扱いは [references/helper.md](references/helper.md)。
 
 ## 2. ステップ番号
 
@@ -157,17 +109,11 @@ RQ の概要ファイル（`docs/questions/<RQ_NAME>.md`）のヘッダ行の `*
 
 ### 人のタスクの片付け
 
-`[人]` のタスクは、マージの後に `main` で片付けてよい。規則は steering の「人が行うタスク」に従う。
-
-1. `$HELPER human-tasks <RQ_NAME>` で残りを示す。
-2. ユーザーが完了を伝えたら、そのタスクの「完了の確かめ方」で確かめられる部分を確かめる（例: `data/manifest.md` に記載があり、ハッシュが一致する。入手した論文の書誌が出典ファイルと一致する）。確かめられたら、`main` の `RQ_DIR/tasks.md` を `- [x]` にする。確かめられないときは `- [ ]` のまま残し、何が足りないかを伝える。
-3. 人が入手したもので、収集や分析をやり直す必要があるとき（有料レポートを入手した、インタビューを実施したなど）は、その RQ の続きの AI のタスクとして扱う。`researchkit-collect` と `researchkit-analysis` の手順で `main` の上で追加し、`researchkit-findings` で主張と確度を直す。変更が大きい（主張の確度が変わる、新しい主張が増える）ときは、`researchkit-review` で該当する軸を見直す。
-4. `$HELPER sync-status <RQ_NAME>` で状態欄を合わせる。人のタスクがなくなれば `完了` になる。
-5. `tasks.md`、概要ファイル、`docs/questions/README.md`、手順 3 の変更をまとめてコミットする（例: `docs(<RQ_NAME>): 人のタスクの完了を記録`）。クラウドセッションでは push する。
+`[人]` のタスクはマージの後に `main` で片付けてよい。`$HELPER human-tasks <RQ>` で示し、ユーザーが完了を伝えたら「完了の確かめ方」で確かめられる部分を確かめてから `- [x]` にし、`$HELPER sync-status <RQ>` で状態欄を合わせてコミットする。人が入手したもので収集や分析をやり直すときの扱いを含む手順は [references/human-tasks.md](references/human-tasks.md)。
 
 ### 中止
 
-`$HELPER abort <RQ_NAME>` で削除の対象を表示し、ユーザーの明示的な同意を得てから `--yes` を付けて実行する。ユーザーの指示なしに中止してはならない。中止すると、worktree の中の出典、データ、分析の出力も失われる。残したいものがあれば、先にユーザーと扱いを決める。
+`$HELPER abort <RQ>` で対象を示し、ユーザーの明示的な同意を得てから `--yes` で実行する。ユーザーの指示なしに中止しない（worktree の中の出典・データ・分析の出力も失われる）。詳細は [references/human-tasks.md](references/human-tasks.md)。
 
 ## 4. 共通規則
 
@@ -195,6 +141,7 @@ Web 検索には 1 セッションあたりの回数の上限がある。規則�
 | Q8（収集）の前 | `$RK budget --step Q8 --rq <RQ_NAME>` | researchkit-execute、researchkit-all |
 | Q11（5 軸レビュー 1 回目。Counter 軸で検索する）の前 | `$RK budget --step Q11 --rq <RQ_NAME>` | researchkit-execute、researchkit-all |
 | そのほか、検索の多い作業を単独で始める前 | `$RK budget --need <見積もり>` | 必要に応じて |
+| `session.split_after` に入っているステップの `checkpoint` の後 | `checkpoint` の出力の `SPLIT_SESSION` を見る | researchkit-execute、researchkit-all |
 
 | 結果 | すること |
 |---|---|
@@ -225,45 +172,13 @@ Web 検索には 1 セッションあたりの回数の上限がある。規則�
 
 ## 7. 自動モード
 
-引数に `--auto` があるときは、ユーザーに質問せず、エージェント自身が示す推奨案を採用して進める。範囲指定や `all` と組み合わせて、無人で続けて流す使い方を想定する。`researchkit-bootstrap --oneshot` の後に続けて RQ を進めるときも、このモードで扱う。
+引数に `--auto` があるときは質問せず、推奨案を採用して進め、すべてを `RQ_DIR/auto-decisions.md` に記録する（ステップ、論点、選択肢、採用した案、理由、根拠の種類、見直しの優先度、反映したファイル）。安全規則と出典の規則は変わらない。
 
-「曖昧さは推測で埋めない」（steering の基本原則 11）に反しないよう、自動で決めたことはすべて推奨案として明示し、後から見直せる形で記録する（下の『記録』）。§4 の安全規則と、出典の規則（実在を確かめていない出典を根拠にしない、数値を推測で埋めない）は、自動モードでも変わらない。
+**自動モードでも止まる場面**: マージの競合、中止、`NOT_ON_MAIN`、`DEPENDENCY_PENDING`（範囲指定では飛ばす）、憲章・品質基準・`docs/method.md` の変更が要るとき、`[人]` のタスクが終わらないと先に進めないとき、同じ原因の失敗が 3 回続いたとき、Web 検索の予算の STOP、分析のコマンドが決められないとき、Q2 で何を問うか決められないとき、法的な判断が要るとき、`UNCHECKED_TASKS` が片付けても残るとき。止まったときは下の『止まったときの扱い』に従う。
 
-### 推奨案を自動で採用する場面
+**見直しの優先度を「高」にするもの**: 問いの範囲・答えの形・判定の基準、手法の選択、収集の後の計画の変更、結果を見た後に足した探索的な分析、仮説の棄却・採択、逆流で上流の文書を変えたもの、確度 `確実` の主張、根拠が推測だけのもの。
 
-| 場面 | 自動モードでの動作 |
-|---|---|
-| Q1 の再開の確認（`reused` / `reattached`） | `NEXT_STEP` から再開する |
-| Q2〜Q4 の問いの範囲・答えの形・判定の基準・用語の定義の質問 | 推奨案を回答として採用する。1 つに絞れない論点は、範囲が狭く、後から広げやすい選択肢を採る |
-| Q5 の手法の組み合わせ、検索式とデータベース、標本、反証条件 | `docs/method.md` で選んだ手法の範囲の中で推奨案を採る。反証条件は、収集の前に書く（基本原則 4） |
-| Q6 の `[人]` の切り分け | steering の「人が行うタスク」の対象に当たるものは `[人]` にし、人と AI が混ざる作業は 2 つに分ける |
-| Q7 の修正方針（「修正案を当てますか」など） | 「はい」とみなし、推奨の修正を当てる |
-| Q8 で実在を確かめられない出典 | 等級 `D` にして根拠に使わない。ほかの出典を探す。見つからなければ「見つからなかった」ことを検索ログに書く |
-| Q8 で有料・要申請の資料が要る | `[人]` のタスクに足し、手に入る資料で進める。その資料がないと答えられない判定の基準は、確度を下げるか「残った問い」にする |
-| Q9 で収集の後に計画を変える必要がある | 変えたことと理由を `plan.md` の「計画の変更」に書いて進める（基本原則 4）。見直しの優先度は「高」にする |
-| Q10 の確度の付け方、逆流（`hypotheses.md`、`issue-tree.md`、`docs/questions/` の更新） | 憲章の確度の段階と根拠の数・等級から付ける。逆流は行い、仮説の棄却・採択と上流の文書の変更は見直しの優先度を「高」にする |
-| Q11〜Q12 の指摘の直し方 | 推奨の修正を当てる。Counter 軸の追加の検索で反対の証拠が見つかったら、主張の確度を下げるか、反証・限界の欄に書く |
-| `LEFTOVER_CHANGES` | worktree の変更はこの RQ の作業で生じたものなので、`--commit-leftovers` を付けて `finish` を再実行する。含めた変更の一覧を完了報告に挙げる |
-| `UNCHECKED_TASKS` | 未完了のタスクを該当するステップの手順で片付け、`finish` を再実行する（`--allow-unchecked` は自動で付けない） |
-| `[人]` のタスク | 実行せず、`[x]` にもしない。保留にし、依存しない後続のタスクを続ける。保留にしたタスクを完了報告に挙げる |
-| `HUMAN_TASKS_PENDING` | マージは済んでいる。残りの `[人]` のタスクを完了報告に挙げる（自動で完了にしない） |
-
-### 自動モードでも止まる場面
-
-次の場面は、推奨案を選んでも取り返しがつかないか、推測で進めると危険なので、自動では進めない。
-
-- `finish` でのマージの競合（自動で解消しない）
-- 中止（`abort`）。ユーザーの明示的な同意が要る
-- `NOT_ON_MAIN`（メインの作業ツリーのブランチを自動で切り替えない）
-- `DEPENDENCY_PENDING`（範囲指定や `all` では飛ばす）
-- 憲章（`.researchkit/memory/constitution.md`）、品質基準（`docs/quality.md`）、`docs/method.md` の変更が要るとき（これらの改訂は自動で行わない）
-- `[人]` のタスクが終わらないと先に進めないとき（例: 主な情報源が有料で、入手しないと問いに答えられない。インタビューの実施が要る。倫理審査や同意の取得が要る）
-- 同じ原因の失敗（分析のスクリプトの失敗、`check.py` や `numbers.py` の ERROR など）が、3 回直しても解消しないとき
-- Web 検索の予算が足りないとき（§5 の `VERDICT: STOP`）。これは失敗ではなく区切りである
-- 分析のコマンドが §4 の情報源から判断できないとき
-- Q2 で、RQ の概要ファイルも追加の指示もなく、何を問うかが決められないとき
-- 個人情報、利用規約、引用の範囲について、法的な判断が要るとき
-- `UNCHECKED_TASKS` で、未完了のタスクを片付けても残るとき
+場面ごとの自動の動き（`LEFTOVER_CHANGES` は `--commit-leftovers`、`UNCHECKED_TASKS` は片付けて再実行、など）、止まったときの扱い、明確化の記録の書き方は [references/auto-mode.md](references/auto-mode.md)。
 
 ### 止まったときの扱い
 
@@ -272,29 +187,10 @@ Web 検索には 1 セッションあたりの回数の上限がある。規則�
 3. 範囲指定や `all` なら、その RQ を飛ばして次に進む（`all` では `next` の `--skip` に加える）。後の RQ の概要ファイルの `**依存**` に、飛ばした RQ が含まれる場合は、その RQ も飛ばす。予算の STOP のときは、飛ばさずに全体を止める。
 4. 止まった RQ は、ユーザーが判断した後に、同じスキルをもう一度実行すれば（`--auto` の有無を問わない）続きのステップから再開できる。
 
-### 記録
-
-- **明確化（Q3、Q4）**: 見出しを `### Session YYYY-MM-DD (Round 1, auto)` のようにし、自動で採用した回答の行末に `(auto)` を付ける。
-- **自動判断の一覧**: 自動で採用したすべての判断を `RQ_DIR/auto-decisions.md` に追記する。1 件ごとに、ステップ、論点、選択肢、採用した案、理由、根拠の種類（ユーザーの入力 / 調査 / 推測）、見直しの優先度（高 / 中 / 低）、反映したファイルを書く。明確化の回答もここに併記する。
-- **見直しの優先度を「高」にするもの**: 問いの範囲・答えの形・判定の基準の決定、手法の選択、収集の後の計画の変更、結果を見た後に足した探索的な分析（レビューで足したものを含む）、仮説の棄却・採択、逆流で上流の文書（`hypotheses.md`、`issue-tree.md`、`docs/questions/`）を変えたもの、確度 `確実` を付けた主張、根拠が推測だけのもの。`$RK handover` が「高」のものを引き継ぎ書に集める。
-- **完了報告**: 各スキルの完了報告に、`auto-decisions.md` の要約（見直しを勧める判断を先に）と、止まった RQ とその理由、ユーザーに判断してほしい事項を加える。見直すときは、該当するステップのスキル（`researchkit-clarify`、`researchkit-plan` など）を案内する。
-
 ## 8. クラウドセッション
 
-環境変数 `CLAUDE_CODE_REMOTE` が `true`（Claude Code のクラウドセッション）のときだけ当てはまる。規則は steering の「Claude Code のクラウドセッション」に従う。
-
-- **マージ先**: `RESEARCHKIT_MAIN_BRANCH` がなければ、`$HELPER` はメインの作業ツリーの今のブランチ（セッションの作業ブランチ）をマージ先にする。この文書の `main` は、その作業ブランチに読み替える。メインの作業ツリーが `rq/*` のブランチや detached HEAD にいるときは判定できないので、`main` に戻る。
-- **push**: `finish` はマージの後に、マージ先のブランチを origin に push する。出力は `PUSHED`、`PUSH_SKIPPED`（origin がない）、`PUSH_FAILED` のいずれかである。`PUSH_FAILED` のときもマージは済んでいるので、その内容をユーザーに伝える。引き継ぎ書のコミットや、人のタスクの片付けのコミットなど、作業ブランチへのコミットの後も、そのたびに push する。`main` へは PR で取り込む。
-- **中断と再開**: `rq/*` のブランチは push できず、VM が回収されると消える。1 つの RQ は 1 つのセッションで `finish` まで進める。予算で止まりそうな RQ（文献レビューなど検索の多いもの）は、セッションの初めに着手する。
-- **質問**: `--auto` で進めることを勧める。
-- **Web 調査**: WebFetch が失敗したら、WebSearch の結果で進める。ページを開けなかった出典は、その旨を `verified_by` に書き、等級を 1 段下げる。数値を推測で埋めない。
+環境変数 `CLAUDE_CODE_REMOTE` が `true` のときだけ当てはまる（マージ先は作業ブランチ、`finish` の後に push、1 つの RQ は 1 つのセッションで `finish` まで、`--auto` を勧める、WebFetch の失敗時の扱い）。詳細は [references/cloud.md](references/cloud.md)。
 
 ## 9. 手動での利用
 
-ユーザーからこのスキルを直接呼ばれたときは、引数に応じて次を行う。
-
-- `status`（または引数なし）: `$HELPER status` の結果を表示し、途中の worktree があれば、再開に使うスキル（Q2〜Q7-2 は `researchkit-question`、Q8〜Q12 は `researchkit-execute`、どちらでも `researchkit-all`）を案内する。人の作業が残っている RQ があれば、`human-tasks` での確認を案内する。
-- `human-tasks [<RQ>]`: 結果を表示する。ユーザーが完了を伝えたら、§3『人のタスクの片付け』の手順に従う。
-- `sync-status <RQ>`: §3『人のタスクの片付け』の手順に従う。
-- `next --phase <phase>`: 結果を表示する。
-- `abort <RQ>`: §3『中止』の手順に従う。
+ユーザーにこのスキルを直接呼ばれたとき（`status`、`human-tasks`、`sync-status`、`next`、`abort`）の動きは [references/cloud.md](references/cloud.md)。

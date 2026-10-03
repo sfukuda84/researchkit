@@ -56,6 +56,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
             "qualitative": {"Q8": 15, "Q11": 20, "Q12": 15, "rq": 50},
         },
         "stop_after_bootstrap": True,
+        "split_after": [],
         "rqs_unmetered": 1,
     },
     "confidence": {"levels": ["確実", "可能性が高い", "示唆", "不明"]},

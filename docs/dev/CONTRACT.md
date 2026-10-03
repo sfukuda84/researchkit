@@ -27,6 +27,7 @@ scaffold の開発用の文書である（新規プロジェクトには持ち�
 | `hooks install` | `.claude/settings.json` に、Web 検索の回数を数えるフック（`count_search.py`）を登録する。既存の設定は保つ |
 | `sources next <NNN> [--count <k>]` | RQ `<NNN>` の次の空き出典 ID を `k` 個出す（既定 1）。`sources/` の作業ツリーと `main` の両方を見て、使われている最大の連番の次から出す |
 | `sources list [--grade A,B] [--rq <NNN>] [--unused]` | 出典の一覧（ID、等級、種類、題名、使った RQ） |
+| `brief <RQ> [--width <n>] [--max-tasks <n>]` | RQ の要点を出す。`# <RQ>（<成果物のディレクトリ>）` と、`## 問い`、`## 小問`、`## つながる決定`、`## つながる仮説`、`## 判定の基準`、`## 仮説と反証条件`、`## 確度の付け方`、`## 検索数の見積もり`、`## 計画の変更`（それぞれの節があるときだけ）、`## タスク（完了 n、未完了 m）`、`## 成果物`。作業中の worktree の成果物を優先して読む |
 | `estat list <政府統計コード\|一覧の URL> [--grep <語>] [--limit <n>]` | e-Stat の一覧を読む（`estat.py`）。`URL`、`HTTP` と、分類のページなら `CLASSES: <件数>` と「名前（周期）\t件数\t公開日\tURL」の行、表のページなら `TABLES: <件数>` と「statInfId\t形式\t表番号 題名［グループ］\t調査年月\t公開日」の行 |
 | `estat get <statInfId> --kind <0\|1\|2\|3\|4> --out <path>` | 表を取得する。`URL`、`HTTP`、`BYTES`、`FORMAT`（xls/xlsx/csv/pdf/zip/html）、`SHA256`、`PATH`。拡張子が中身と違えば中身の拡張子で保存し `WARNING`。HTML（エラーのページ）なら保存せず `ERROR` で終了コード 1 |
 | `data add <file> --source <ID> --url <URL> --desc <内容> --rq <NNN> [--license] [--method] [--accessed]` | `data/manifest.md` の「ファイル」の表（SHA-256 の列を持つ表）の末尾に 1 行足す。SHA-256・大きさ・置き場所はファイルから求める。同じファイルの行があれば終了コード 1 |

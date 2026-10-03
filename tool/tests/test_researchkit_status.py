@@ -385,6 +385,43 @@ class ResearchkitStatusTest(unittest.TestCase):
         if os.name != "nt":
             self.assertTrue(os.access(rk, os.X_OK))
 
+    def test_brief(self) -> None:
+        self.init_project()
+        q = self.repo / "docs" / "questions"
+        q.mkdir(parents=True, exist_ok=True)
+        (q / "003-volume.md").write_text("# 003\n\n**状態**: 設計済み | **手法**: data\n", encoding="utf-8")
+        d = self.repo / "studies" / "003-volume"
+        d.mkdir(parents=True)
+        (d / "spec.md").write_text(
+            "# 仕様\n\n## 問い\n\n生産量は保たれているか？\n\n### 小問\n\n| ID | 小問 |\n|---|---|\n| SQ1 | " + "長い" * 200 + " |\n\n"
+            "## つながる決定\n\n- **D1**: シナリオを選ぶ\n  - 分かれ目: 1%\n\n## 判定の基準\n\n| ID | 条件 |\n|---|---|\n| AC1 | 計算できる |\n\n"
+            "## 範囲\n\n- 全国\n", encoding="utf-8")
+        (d / "plan.md").write_text(
+            "# 計画\n\n## 確度の付け方\n\n<!-- 注 -->\n\n| 順 | 条件 | 確度 |\n|---|---|---|\n| 1 | 計算できない | 不明 |\n\n"
+            "## 検索数の見積もり\n\n| ステップ | 見積もり（件） |\n|---|---|\n| Q8 収集 | 20 |\n\n## 計画の変更\n\n| 日付 | 変えたこと |\n|---|---|\n", encoding="utf-8")
+        (d / "tasks.md").write_text("- [x] T001 済み\n- [ ] T002 [人] 入手する\n- [ ] T003 集める\n", encoding="utf-8")
+        out = self.out("brief", "3", "--width", "80")
+        self.assertIn("# 003-volume（studies/003-volume）", out)
+        for head in ("## 問い", "## 小問", "## つながる決定", "## 判定の基準", "## 確度の付け方", "## 検索数の見積もり",
+                     "## タスク（完了 1、未完了 2）", "## 成果物"):
+            self.assertIn(head, out)
+        self.assertIn("生産量は保たれているか？", out)
+        self.assertNotIn("### 小問", out)  # 見出しの行は出さない
+        self.assertIn("- **D1**: シナリオを選ぶ", out)
+        self.assertNotIn("分かれ目", out)  # 決定は見出しの行だけ
+        self.assertNotIn("<!--", out)
+        self.assertNotIn("## 範囲", out)
+        self.assertNotIn("## 計画の変更", out)  # 中身のない節は出さない
+        self.assertTrue(all(len(line) <= 80 for line in out.splitlines()))
+        self.assertIn("…", out)
+        self.assertIn("- [ ] T002 [人] 入手する", out)
+        # 作業中の worktree の成果物を優先する
+        self.commit_all("s")
+        wt = self.repo / ".worktrees" / "003-volume"
+        self.git("worktree", "add", "-q", "-b", "rq/003-volume", str(wt), "main")
+        (wt / "studies" / "003-volume" / "tasks.md").write_text("- [x] T001\n- [x] T002\n- [x] T003\n", encoding="utf-8")
+        self.assertIn("## タスク（完了 3、未完了 0）", self.out("brief", "003"))
+
     def test_data_add(self) -> None:
         self.init_project()
         tpl = SKILLS / "researchkit-foundation" / "templates" / "manifest.md"

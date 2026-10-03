@@ -45,6 +45,7 @@ $ARGUMENTS
 4. **実行の工程**: 同じ worktree のまま、`researchkit-execute` の §3 の Q8〜Q12 を順に実行する。
    - **Q8 の前に `$RK budget --step Q8 --rq <RQ_NAME>`、Q11 の前に `$RK budget --step Q11 --rq <RQ_NAME>` を実行する。** STOP なら、そのステップに入らずに止まる。それまでのチェックポイントは記録済みなので、次のセッションでそのステップから再開する。
    - `researchkit-execute` の §2（予算の確認、Q1、Q13）は実行しない。worktree を作り直さないこと。
+   - **`checkpoint` が `SPLIT_SESSION` を出したら**（`session.split_after` に入っているステップの後）、次のステップに入らずに止まる。`$RK handover --note "<RQ_NAME> の <ステップ> の後で区切った。新しいセッションで /researchkit-all <RQ_NAME> を実行して再開する"` で引き継ぎ書を更新する（worktree の中で止めたのでコミットはしなくてよい）。予算の STOP と同じく失敗ではなく区切りで、自動モードでも止まる。親の文脈は工程の後半ほど重くなるので、区切ると後のステップを軽い文脈で進められる
 5. **Q13 片付け**: 『Q13 片付け』の節に従い、`$HELPER finish <RQ_NAME> --phase all` を実行し、引き継ぎ書を更新してコミットする。状態は `完了`、`[人]` のタスクが残れば `人の作業待ち` になる。
 6. 次の RQ があれば 1 に戻る。回数を数えられない環境（`budget` が `VERDICT: UNMETERED`）では、このセッションで `session.rqs_unmetered`（既定 1）件の RQ を終えたところで止まる。
 
