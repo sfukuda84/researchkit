@@ -68,6 +68,46 @@ class CheckTest(unittest.TestCase):
                               capture_output=True, text=True, encoding="utf-8")
         return proc.returncode, proc.stdout + proc.stderr
 
+    def test_manifest_and_raw_files(self) -> None:
+        import hashlib
+        body = b"a,b\n1,2\n"
+        self.write("data/raw/listed.csv", body.decode())
+        digest = hashlib.sha256(body).hexdigest()
+        manifest = ("# データの目録\n\n## ファイル\n\n"
+                    "| ファイル | 置き場所 | 出典 ID | 出所（URL・提供元） | 取得日 | 取得の方法 | ライセンス・利用規約 | SHA-256 | 大きさ | 内容 | 使った RQ |\n"
+                    "|---|---|---|---|---|---|---|---|---|---|---|\n"
+                    "| <例: data/raw/x.csv> | raw | <S000-0003> | <URL> | <日付> | <方法> | <規約> | <ハッシュ> | <大きさ> | <内容> | <001> |\n"
+                    f"| data/raw/listed.csv | raw | S001-0001 | u | 2026-09-01 | curl | 規約 | {digest} | 8 bytes | 表 | 001 |\n"
+                    "| data/large/big.parquet | large | S001-0001 | u | 2026-09-01 | 人 | 規約 | " + "0" * 64 + " | 1 GB | 大 | 001 |\n\n"
+                    "## 取り扱いの注意\n")
+        self.write("data/manifest.md", manifest)
+        code, out = self.run_check("--all")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("_DATA", out)
+        # 目録にないファイル、ハッシュの違い、ないファイル
+        self.write("data/raw/orphan.xls", "x")
+        self.write("data/raw/listed.csv", "changed")
+        self.write("data/manifest.md", manifest.replace("| data/large/big.parquet",
+                                                         "| data/raw/gone.csv | raw | S001-0001 | u | d | m | l | - | 1 | g | 001 |\n| data/large/big.parquet"))
+        code, out = self.run_check("--rq", "001")
+        self.assertEqual(code, 1, out)
+        self.assertIn("UNLISTED_DATA", out)
+        self.assertIn("data/raw/orphan.xls", out)
+        self.assertIn("HASH_MISMATCH", out)
+        self.assertIn("MISSING_DATA", out)
+        self.assertNotIn("big.parquet", out)  # data/large/ は手元になくてよい
+        # 別の RQ を指定したときは、その RQ の行だけを照らす（目録にないファイルは常に出す）
+        (self.root / "studies" / "002-other").mkdir(parents=True)
+        code, out = self.run_check("--rq", "002")
+        self.assertIn("UNLISTED_DATA", out)
+        self.assertNotIn("HASH_MISMATCH", out)
+
+    def test_raw_files_without_manifest(self) -> None:
+        self.write("data/raw/a.csv", "x")
+        code, out = self.run_check("--all")
+        self.assertEqual(code, 1)
+        self.assertIn("NO_MANIFEST", out)
+
     def test_clean_project(self) -> None:
         code, out = self.run_check("--all")
         self.assertEqual(code, 0, out)

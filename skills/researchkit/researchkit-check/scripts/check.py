@@ -2,6 +2,7 @@
 """check.py - researchkit の機械検証（出典の参照と出典台帳）
 
 主張の表（findings.md、統合報告 reports/report.md、任意の文書）の根拠の欄と、出典台帳（sources/<ID>.md）を検証する。
+--rq と --all では、データの目録（data/manifest.md）と data/raw/ のファイルも突き合わせる（目録にないファイル、目録にあるのにないファイル、SHA-256 の不一致）。
 macOS / Linux / Windows で動くように、標準ライブラリだけで書く（Python 3.9 以上）。
 
 使い方:
@@ -30,6 +31,7 @@ sys.path[:] = [p for p in sys.path if Path(p or ".").resolve() != _HERE]
 
 import argparse  # noqa: E402
 import datetime as dt  # noqa: E402
+import hashlib  # noqa: E402
 import re  # noqa: E402
 import urllib.error  # noqa: E402
 import urllib.request  # noqa: E402
@@ -45,6 +47,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "sources": "sources",
         "studies": "studies",
         "reports": "reports",
+        "data": "data",
     },
     "confidence": {"levels": ["確実", "可能性が高い", "示唆", "不明"]},
     "sources": {"grades": ["A", "B", "C", "D"], "min_grade": "C", "check_online": False},
@@ -578,6 +581,65 @@ def check_online(rep: Report, src: Source) -> None:
 
 # ---------------------------------------------------------------- main
 
+# ---------------------------------------------------------------- データの目録（data/manifest.md）
+
+DATA_IGNORE = {".gitkeep", ".DS_Store", "README.md"}
+
+
+def manifest_rows(text: str) -> list[tuple[int, dict[str, str]]]:
+    """目録の「ファイル」の表（SHA-256 の列を持つ表）の行。例の行（< で始まる）は除く。"""
+    for header, rows in table_rows(text):
+        if "SHA-256" in header and "ファイル" in header:
+            out = []
+            for no, cells in rows:
+                row = {header[i]: (cells[i] if i < len(cells) else "") for i in range(len(header))}
+                name = row.get("ファイル", "").strip("` ")
+                if name and not name.startswith("<"):
+                    out.append((no, dict(row, ファイル=name)))
+            return out
+    return []
+
+
+def check_manifest(rep: Report, root: Path, cfg: dict, rq: str | None = None) -> None:
+    """data/raw/ のファイルと目録を突き合わせる。
+
+    - UNLISTED_DATA（ERROR）: data/raw/ にあるが目録にない。取得したのに記録していない（途中で切れた収集の跡など）
+    - MISSING_DATA（ERROR）: 目録の raw の行のファイルがない
+    - HASH_MISMATCH（ERROR）: 目録の SHA-256 と中身が違う（加工した、別の版で上書きした）
+    --rq のときは、使った RQ にその番号がある行と、目録にないファイルだけを見る。
+    """
+    data_dir = pth(root, cfg, "data")
+    raw = data_dir / "raw"
+    manifest = data_dir / "manifest.md"
+    files = sorted(p for p in raw.rglob("*") if p.is_file() and p.name not in DATA_IGNORE
+                   and not any(part.startswith(".") for part in p.relative_to(raw).parts)) if raw.is_dir() else []
+    if not manifest.is_file():
+        if files:
+            rep.error(raw, 1, "NO_MANIFEST", f"data/raw/ に {len(files)} 件のファイルがあるのに {rep.rel(manifest)} がない")
+        return
+    rows = manifest_rows(manifest.read_text(encoding="utf-8"))
+    listed = {r["ファイル"] for _, r in rows}
+    for f in files:
+        name = rep.rel(f)
+        if name not in listed:
+            rep.error(manifest, 1, "UNLISTED_DATA",
+                      f"{name} が目録にない。出どころを確かめて行を足す（researchkit.py data add）か、不要なら人に確かめて取り除く")
+    for no, r in rows:
+        if rq and rq not in {normalize_rq(x) for x in re.split(r"[,、\s]+", r.get("使った RQ", "")) if re.match(r"^\d", x)}:
+            continue
+        path = root / r["ファイル"]
+        if r.get("置き場所", "raw").strip() == "large" and not path.exists():
+            continue  # コミットしない大きなファイル。手元にないことがある
+        if not path.is_file():
+            rep.error(manifest, no, "MISSING_DATA", f"{r['ファイル']} がない")
+            continue
+        want = r.get("SHA-256", "").strip().lower()
+        if re.fullmatch(r"[0-9a-f]{64}", want):
+            got = hashlib.sha256(path.read_bytes()).hexdigest()
+            if got != want:
+                rep.error(manifest, no, "HASH_MISMATCH", f"{r['ファイル']} の SHA-256 が目録と違う（目録 {want[:12]}…、実際 {got[:12]}…）")
+
+
 def resolve_file(root: Path, given: str) -> Path:
     """--file のパス。相対パスは、作業ディレクトリから見てなければルートから見る。"""
     path = Path(given)
@@ -650,6 +712,8 @@ def main(argv: list[str] | None = None) -> int:
             if num and num != "000" and not claim_tables(t.read_text(encoding="utf-8")):
                 rep.warn(t, 1, "NO_CLAIM_TABLE", "主張の表（| ID | 主張 | 根拠 | 確度 | 反証・限界 |）がない")
             check_document(rep, t, root, cfg, sources, rqs, required=False)
+
+    check_manifest(rep, root, cfg, normalize_rq(args.rq) if args.rq else None)
 
     for src in in_scope:
         check_source(rep, src, cfg, today)

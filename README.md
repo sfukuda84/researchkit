@@ -178,6 +178,9 @@ python3 $RK_PY handover             # 引き継ぎ書（docs/handover/）
 python3 $RK_PY doctor               # 設定、リンク、フックの診断
 python3 $RK_PY budget --step Q8     # Web 検索の残り（VERDICT: OK / STOP / UNMETERED）
 python3 $RK_PY sources list --unused   # 使われていない出典
+python3 $RK_PY estat list 00500300 --grep 国内生産量   # e-Stat の統計の分類と表（statInfId）
+python3 $RK_PY estat get 000040422798 --kind 1 --out data/raw/fbs_ruinen.csv   # 表の取得
+python3 $RK_PY data add data/raw/fbs_ruinen.csv --source S003-0001 --url <URL> --desc <内容> --rq 003   # 目録に 1 行足す
 ```
 
 または `/researchkit-status` を実行する。

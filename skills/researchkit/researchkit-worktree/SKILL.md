@@ -116,6 +116,7 @@ RQ の概要ファイル（`docs/questions/<RQ_NAME>.md`）のヘッダ行の `*
 - 途中で止まった RQ は、同じスキル（または担当範囲を含む別の統括スキル）をもう一度実行すれば、`ensure` が既存の worktree を再利用し（`reused`）、ブランチだけが残っていれば worktree を作り直して（`reattached`）、`NEXT_STEP` から続ける。セッションをまたいでも、エージェントを変えても同じである。
 - 再開のときは、`COMPLETED_STEPS` と `NEXT_STEP` をユーザーに示し、`NEXT_STEP` から再開してよいかを確かめる（自動モードでは確かめずに再開する）。ユーザーが別のステップからのやり直しを指示したら、そのステップから進める。完了済みの記録は残したまま、成果物を更新し、そのステップの `checkpoint` を記録し直す。
 - 再開の前に、`docs/handover/CURRENT_STATE.md` と `PITFALLS.md` を読み、止まった理由と判断待ちの事項を確かめる。止まった理由が解消していなければ、先にそれを片付ける。
+- `ensure` は、再利用した worktree にどのステップのコミットにも入っていない変更があると `UNCOMMITTED_CHANGES: <件数>` を出し、そのうち目録（`data/manifest.md`）にない `data/raw/` のファイルを `UNRECORDED_DATA: <件数>` と一覧で出す。前のセッションが収集（Q8）の途中で切れた跡である。続きのステップに入る前に、ファイルごとに出どころ（URL、statInfId）を確かめ、取り直して SHA-256 が一致したものを `$RK data add` で目録に載せる（`researchkit-status` の §8）。出どころが分からないファイルは根拠に使わず、ユーザーに確かめてから取り除く（自動モードでは取り除かずに残し、完了報告に挙げる）。
 - 設計の途中の worktree を `researchkit-execute` で再開しようとすると `DESIGN_INCOMPLETE`、実行に入った worktree を `researchkit-question` で再開しようとすると `EXECUTE_IN_PROGRESS` で止まる。`researchkit-all` は、どちらの途中からでも再開できる。
 
 ### 各ステップの作業場所
