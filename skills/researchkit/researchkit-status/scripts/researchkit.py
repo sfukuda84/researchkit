@@ -1113,6 +1113,32 @@ def cmd_brief(root: Path, args: argparse.Namespace) -> int:
             out(f"## {label}")
             for line in lines:
                 out(line)
+    findings = read("findings.md")
+    if findings:
+        answer = brief_lines(md_section(findings, "答え"), width, lambda l: not l.startswith("|"))[:2]
+        claims = [l for l in findings.splitlines() if re.match(r"^\|\s*C\d+\s*\|", l)]
+        rows = []
+        for line in claims:
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if len(cells) >= 4:
+                text = re.sub(r"\{N:[^}]*\}", "", cells[1])
+                rows.append(clip(f"| {cells[0]} | {text} | {cells[3]} |", width))
+        hyp = brief_lines(md_section(findings, "仮説ごとの判定"), width, lambda l: l.startswith("|"))
+        if answer or rows:
+            out("")
+            out("## 答え（findings.md）")
+            for line in answer:
+                out(line)
+        if rows:
+            out("")
+            out(f"## 主張（{len(rows)} 件。ID、主張、確度。数値の参照の記号は省く）")
+            for line in rows:
+                out(line)
+        if len(hyp) > 1:
+            out("")
+            out("## 仮説ごとの判定")
+            for line in hyp:
+                out(line)
     todo = [clip(l.strip(), width) for l in tasks.splitlines() if l.strip().startswith("- [ ]")]
     done = sum(1 for l in tasks.splitlines() if l.strip().startswith("- [x]"))
     out("")
