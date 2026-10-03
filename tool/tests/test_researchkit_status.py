@@ -415,6 +415,16 @@ class ResearchkitStatusTest(unittest.TestCase):
         self.assertTrue(all(len(line) <= 80 for line in out.splitlines()))
         self.assertIn("…", out)
         self.assertIn("- [ ] T002 [人] 入手する", out)
+        self.assertNotIn("## 主張", out)  # findings.md がなければ出さない
+        (d / "findings.md").write_text(
+            "# 主張\n\n## 答え\n\n年 0.56% 減った（C1）。\n\n## 主張\n\n| ID | 主張 | 根拠 | 確度 | 反証・限界 |\n|---|---|---|---|---|\n"
+            "| C1 | 年 -0.56%{N:analysis/out/c.json#cagr.main} 減った | S003-0001 | 確実 | 長い限界 |\n\n"
+            "## 仮説ごとの判定\n\n| 仮説 | 判定 |\n|---|---|\n| H2 | 保留 |\n", encoding="utf-8")
+        out = self.out("brief", "3")
+        self.assertIn("## 答え（findings.md）", out)
+        self.assertIn("年 0.56% 減った（C1）。", out)
+        self.assertIn("| C1 | 年 -0.56% 減った | 確実 |", out)  # 数値の参照の記号と根拠・限界の欄は省く
+        self.assertIn("| H2 | 保留 |", out)
         # 作業中の worktree の成果物を優先する
         self.commit_all("s")
         wt = self.repo / ".worktrees" / "003-volume"
