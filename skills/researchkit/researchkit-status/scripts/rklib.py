@@ -55,6 +55,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "confidence": {"levels": ["確実", "可能性が高い", "示唆", "不明"]},
     "sources": {"grades": ["A", "B", "C", "D"], "min_grade": "C", "check_online": False},
     "data": {"max_file_mb": 5},
+    "subagents": {"model": "sonnet", "max_parallel": 3},
+    "output": {"max_lines": 40},
     "numbers": {"tolerance": 0.005},
 }
 

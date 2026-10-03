@@ -352,6 +352,8 @@ class RklibTest(unittest.TestCase):
         self.assertEqual(set(cfg["paths"]), set(self.rklib.DEFAULT_CONFIG["paths"]))
         self.assertEqual(cfg["paths"], self.rklib.DEFAULT_CONFIG["paths"])
         self.assertEqual(cfg["session"]["estimates"], self.rklib.DEFAULT_CONFIG["session"]["estimates"])
+        self.assertEqual(cfg["subagents"], self.rklib.DEFAULT_CONFIG["subagents"])
+        self.assertEqual(cfg["output"], self.rklib.DEFAULT_CONFIG["output"])
         self.assertEqual(cfg["confidence"]["levels"], ["確実", "可能性が高い", "示唆", "不明"])
         self.assertIsNone(cfg["commands"]["analysis"])
         self.assertEqual(cfg["numbers"]["tolerance"], 0.005)

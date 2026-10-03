@@ -118,6 +118,16 @@ Web 検索には 1 セッションあたりの回数の上限がある（Claude 
 - **数えられない環境**（Claude Code 以外）では、1 セッションで `session.rqs_unmetered`（既定 1）件の RQ を終えたら止まる。
 - 上限と見積もりは `.researchkit/config.yaml` の `session` で変える。文献レビューの RQ は多めに見積もる。既存の調査には `python3 skills/researchkit/researchkit-status/scripts/researchkit.py hooks install` でフックを入れる。
 
+## 利用量を抑える
+
+モデルは呼び出しのたびに会話の全体を読み直すので、利用量の大半は「呼び出しの回数 × 文脈の大きさ」で決まる。通しの確認では、立ち上げ（R1〜R12）の 1 セッションで Opus の呼び出しが約 600 回（うち約 8 割がサブエージェント）、文脈の読み直しが約 3,900 万トークンになった。次の 3 つで抑える（`.researchkit/config.yaml`）。
+
+| 設定 | 既定 | 内容 |
+|---|---|---|
+| `subagents.model` | `sonnet` | 収集・予備調査・レビューの軸などを任せるサブエージェントのモデル。判断の要る作業（主張と確度の確定、仮説の判定、指摘の裏取り、統合）は親が行う。親と同じにするなら `inherit` |
+| `subagents.max_parallel` | `3` | 同時に動かすサブエージェントの上限。系統や軸が多いときは組に分ける |
+| `output.max_lines` | `40` | 取得・集計・分析のコマンドが会話に返す行数の目安。結果はファイルに書き、件数・パス・要約だけを返す |
+
 ## コマンドの導入と更新
 
 [speckit](https://github.com/sfukuda84/my-speckit-scaffold) の `new-speckit-project` と同じく、uv のツールとして入れる。
