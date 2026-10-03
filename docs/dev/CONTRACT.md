@@ -12,7 +12,7 @@ scaffold の開発用の文書である（新規プロジェクトには持ち�
 
 ## 2. `researchkit.py`（`researchkit-status/scripts/`）
 
-`python3 researchkit.py [--root <dir>] <command>`。`--root` を省くと `.researchkit/config.yaml`（なければ `.git`）を上へ探す。
+`python3 researchkit.py [--root <dir>] <command>`、または入口 `skills/researchkit/rk <command>`（`rk helper …` は worktree_helper.py、`rk check …` は check.py、`rk num …` は numbers.py、`rk validate …` は validate.py に渡す。1 語で呼べるので zsh でも変数に入れて使える。終了コードはそのまま返す）。`--root` を省くと `.researchkit/config.yaml`（なければ `.git`）を上へ探す。
 
 | コマンド | 出力・動作 |
 |---|---|

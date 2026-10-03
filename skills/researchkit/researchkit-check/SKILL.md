@@ -39,7 +39,7 @@ $CHECK [--rq <NNN> | --all] [--file <path>] [--online] [--strict]
 $NUM   [--rq <NNN> | --all] [--file <path>]
 ```
 
-`$CHECK` は `python3 <skills>/researchkit-check/scripts/check.py`、`$NUM` は `python3 <skills>/researchkit-check/scripts/numbers.py` である。どちらも 1 行 1 件 `ERROR|WARN <file>:<line> <code> <説明>` と、最後に `SUMMARY: errors=<n> warnings=<n>` を出す（`numbers.py` は `checked=<突き合わせた数> calc=<{N:calc} の数>` も続ける）。ERROR があれば終了コード 1。
+`$CHECK` は `skills/researchkit/rk check`（`python3 <skills>/researchkit-check/scripts/check.py` と同じ）、`$NUM` は `skills/researchkit/rk num`（`python3 <skills>/researchkit-check/scripts/numbers.py` と同じ）である。どちらも 1 行 1 件 `ERROR|WARN <file>:<line> <code> <説明>` と、最後に `SUMMARY: errors=<n> warnings=<n>` を出す（`numbers.py` は `checked=<突き合わせた数> calc=<{N:calc} の数>` も続ける）。ERROR があれば終了コード 1。
 
 ### 2.1 `check.py`（出典の参照と出典台帳）
 

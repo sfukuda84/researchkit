@@ -229,6 +229,18 @@ class ToolTest(unittest.TestCase):
         self.assertTrue((target / ".researchkit" / "config.yaml").is_file())
         self.assertTrue((target / ".claude" / "settings.json").is_file())
         self.assertEqual(git("status", "--porcelain", cwd=target), "")
+        # 入口 rk は実行できるファイルで、スキルとしてはリンクしない。プロジェクトの中から 1 語で呼べる
+        rk = target / "skills" / "researchkit" / "rk"
+        self.assertTrue(rk.is_file())
+        self.assertFalse((target / ".claude" / "skills" / "rk").exists())
+        if os.name != "nt":
+            self.assertTrue(os.access(rk, os.X_OK))
+            proc = subprocess.run([str(rk), "config", "get", "subagents.model"], cwd=target, capture_output=True,
+                                  text=True, encoding="utf-8")
+            self.assertEqual((proc.returncode, proc.stdout.strip()), (0, "sonnet"), proc.stderr)
+            proc = subprocess.run([str(rk), "helper", "list"], cwd=target, capture_output=True, text=True,
+                                  encoding="utf-8")
+            self.assertEqual(proc.returncode, 0, proc.stderr)
 
     def test_symlink_failure_falls_back_to_copy(self) -> None:
         new_project = load_new_project(self.repo)
@@ -316,6 +328,9 @@ class ToolTest(unittest.TestCase):
         (scaffold / "skills" / "researchkit" / "researchkit-bootstrap" / "added.md").write_text("added\n",
                                                                                                 encoding="utf-8")
         (scaffold / "DESIGN.md").write_text("changed\n", encoding="utf-8")  # 持ち込まないもの
+        tool = scaffold / "skills" / "researchkit" / "rk-extra"
+        tool.write_text("#!/usr/bin/env python3\n", encoding="utf-8")
+        tool.chmod(0o755)
         git("add", "-A", cwd=scaffold)
         git("commit", "-qm", "B", cwd=scaffold)
 
@@ -327,6 +342,8 @@ class ToolTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("新しい版", (target / SKILL).read_text(encoding="utf-8"))
         self.assertTrue((target / "skills" / "researchkit" / "researchkit-bootstrap" / "added.md").is_file())
+        if os.name != "nt":  # 実行権も持ち込む
+            self.assertTrue(os.access(target / "skills" / "researchkit" / "rk-extra", os.X_OK))
         self.assertFalse((target / "DESIGN.md").exists())
         other = (target / OTHER).read_text(encoding="utf-8")
         self.assertIn("手直し", other)

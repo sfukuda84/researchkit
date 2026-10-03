@@ -16,10 +16,11 @@ Claude Code、Codex CLI、Antigravity、Kiro CLI、opencode のいずれでも�
 ## 1. ヘルパースクリプト
 
 ```bash
-python3 <skills>/researchkit-worktree/scripts/worktree_helper.py <command> ...
+skills/researchkit/rk helper <command> ...
+# 同じ: python3 <skills>/researchkit-worktree/scripts/worktree_helper.py <command> ...
 ```
 
-以降、この呼び出しを `$HELPER` と書く。`$RK`（`researchkit-status` の `researchkit.py`）の意味は steering の「エージェントの行動規範」のとおりである。
+以降、この呼び出しを `$HELPER` と書く（steering の「エージェントの行動規範」と同じ。`rk` は 1 語で呼べる入口で、zsh でも変数に入れて使える）。`$RK`（`researchkit-status` の `researchkit.py`）の意味は steering の「エージェントの行動規範」のとおりである。
 
 - `<skills>` は、このスキルが置かれた skills ディレクトリ（`.claude/skills`、`.agents/skills`、`.kiro/skills` のいずれか）である。
 - スクリプトは Python 3.9 以上の標準ライブラリだけで書かれており、macOS、Linux、Windows で動く。プロジェクトのルートからでも worktree の中からでも実行できる。`python3` がない環境では、`python` または `py -3` に読み替える。

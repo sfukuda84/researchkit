@@ -172,15 +172,15 @@ new-researchkit-project ~/research/existing --adopt
 ### 進捗の確認と引き継ぎ
 
 ```bash
-RK_PY=skills/researchkit/researchkit-status/scripts/researchkit.py
-python3 $RK_PY status               # 調査全体の工程と RQ の工程の進捗、出典の件数（等級別）
-python3 $RK_PY handover             # 引き継ぎ書（docs/handover/）
-python3 $RK_PY doctor               # 設定、リンク、フックの診断
-python3 $RK_PY budget --step Q8     # Web 検索の残り（VERDICT: OK / STOP / UNMETERED）
-python3 $RK_PY sources list --unused   # 使われていない出典
-python3 $RK_PY estat list 00500300 --grep 国内生産量   # e-Stat の統計の分類と表（statInfId）
-python3 $RK_PY estat get 000040422798 --kind 1 --out data/raw/fbs_ruinen.csv   # 表の取得
-python3 $RK_PY data add data/raw/fbs_ruinen.csv --source S003-0001 --url <URL> --desc <内容> --rq 003   # 目録に 1 行足す
+RK=skills/researchkit/rk              # 入口（1 語なので zsh でも変数に入れて使える。Windows は py -3 skills/researchkit/rk）
+$RK status               # 調査全体の工程と RQ の工程の進捗、出典の件数（等級別）
+$RK handover             # 引き継ぎ書（docs/handover/）
+$RK doctor               # 設定、リンク、フックの診断
+$RK budget --step Q8     # Web 検索の残り（VERDICT: OK / STOP / UNMETERED）
+$RK sources list --unused   # 使われていない出典
+$RK estat list 00500300 --grep 国内生産量   # e-Stat の統計の分類と表（statInfId）
+$RK estat get 000040422798 --kind 1 --out data/raw/fbs_ruinen.csv   # 表の取得
+$RK data add data/raw/fbs_ruinen.csv --source S003-0001 --url <URL> --desc <内容> --rq 003   # 目録に 1 行足す
 ```
 
 または `/researchkit-status` を実行する。
@@ -188,12 +188,10 @@ python3 $RK_PY data add data/raw/fbs_ruinen.csv --source S003-0001 --url <URL> -
 ### 出典と数値の確認
 
 ```bash
-CHECK_PY=skills/researchkit/researchkit-check/scripts/check.py
-NUM_PY=skills/researchkit/researchkit-check/scripts/numbers.py
-python3 $CHECK_PY --all             # 主張の根拠の出典 ID、出典の必須項目、等級、使われていない出典
-python3 $CHECK_PY --rq 003 --online # RQ 003 だけ。URL と DOI に到達できるかも確かめる
-python3 $NUM_PY --all               # findings.md・報告書の数値と、分析の出力（JSON）の突き合わせ
-python3 $NUM_PY --file reports/report.md
+skills/researchkit/rk check --all             # 主張の根拠の出典 ID、出典の必須項目、等級、使われていない出典、データの目録
+skills/researchkit/rk check --rq 003 --online # RQ 003 だけ。URL と DOI に到達できるかも確かめる
+skills/researchkit/rk num --all               # findings.md・報告書の数値と、分析の出力（JSON）の突き合わせ
+skills/researchkit/rk num --file reports/report.md
 ```
 
 - `check.py` と `numbers.py` は、1 行 1 件 `ERROR|WARN <ファイル>:<行> <コード> <説明>` と、最後に `SUMMARY: errors=<n> warnings=<n>` を出す。エラーがあれば終了コード 1。

@@ -332,6 +332,24 @@ class ResearchkitStatusTest(unittest.TestCase):
         self.assertIn("SOURCE: --need", self.out("budget", "--need", "7", "--rq", "3"))
         self.assertEqual(self.rk("budget", "--step", "Q8", "--rq", "9").returncode, 1)
 
+    def test_rk_entry_dispatches(self) -> None:
+        self.init_project()
+        rk = SKILLS / "rk"
+
+        def run(*args: str) -> subprocess.CompletedProcess:
+            return subprocess.run([sys.executable, str(rk), *args], cwd=self.repo, env=self.env, capture_output=True,
+                                  text=True, encoding="utf-8")
+
+        self.assertEqual(run("config", "get", "subagents.model").stdout.strip(), "sonnet")
+        self.assertEqual(run("budget", "--step", "Q99").returncode, 1)  # 終了コードをそのまま返す
+        self.assertEqual(run("budget", "--need", "999999").returncode, 0)  # 記録なし: UNMETERED
+        self.assertIn("SUMMARY:", run("check", "--all").stdout)
+        self.assertIn("SUMMARY:", run("num", "--all").stdout)
+        self.assertEqual(run("helper", "list").returncode, 0)
+        self.assertIn("skills/researchkit/rk helper", run("--help").stdout)
+        if os.name != "nt":
+            self.assertTrue(os.access(rk, os.X_OK))
+
     def test_data_add(self) -> None:
         self.init_project()
         tpl = SKILLS / "researchkit-foundation" / "templates" / "manifest.md"
