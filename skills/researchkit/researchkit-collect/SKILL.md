@@ -110,7 +110,7 @@ python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read(
 
 ## 7. サブエージェントでの並行収集
 
-検索の系統が独立していればサブエージェント（`subagents.model`、同時に `subagents.max_parallel` まで）に分けてよい。親が出典 ID の範囲を分けて渡し、`tasks.md`・`search-log.md`・`data/manifest.md`・既存の出典ファイルは親だけが書く。サブエージェントの報告の件数・文献名・数値は、成果物のファイルと出典で確かめてから使う。渡すもの・書かせないもの・まとめ方の手順は [references/parallel.md](references/parallel.md)。
+検索の系統が 2 つ以上あれば、**文献だけでなく、デスク（政策・法令・企業の資料）、統計の取得、反対の証拠の検索も**サブエージェント（`subagents.model`、同時に `subagents.max_parallel` まで）に任せる。親は自分で収集せず、系統の割り振り、ID の範囲、まとめ、抜き取りの確認だけを行う（親の文脈は呼び出しのたびに伸び、以降のすべての呼び出しで読み直される。005 の実測で、親が自分で約 100 回の収集をして Q8 の親の利用量が 1.5 倍になった）。親が出典 ID の範囲を分けて渡し、`tasks.md`・`search-log.md`・`data/manifest.md`・既存の出典ファイルは親だけが書く。サブエージェントの報告の件数・文献名・数値は、成果物のファイルと出典で確かめてから使う。渡すもの・書かせないもの・まとめ方の手順は [references/parallel.md](references/parallel.md)。
 
 ## 8. タスクの実行と `[人]`
 

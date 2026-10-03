@@ -68,7 +68,8 @@ RQ の概要ファイル（`docs/questions/<RQ_NAME>.md`）のヘッダ行の `*
 
 - 途中で止まった RQ は、同じスキル（または担当範囲を含む別の統括スキル）をもう一度実行すれば、`ensure` が既存の worktree を再利用し（`reused`）、ブランチだけが残っていれば worktree を作り直して（`reattached`）、`NEXT_STEP` から続ける。セッションをまたいでも、エージェントを変えても同じである。
 - 再開のときは、`COMPLETED_STEPS` と `NEXT_STEP` をユーザーに示し、`NEXT_STEP` から再開してよいかを確かめる（自動モードでは確かめずに再開する）。ユーザーが別のステップからのやり直しを指示したら、そのステップから進める。完了済みの記録は残したまま、成果物を更新し、そのステップの `checkpoint` を記録し直す。
-- 再開の前に、`docs/handover/CURRENT_STATE.md` と `PITFALLS.md` を読み、止まった理由と判断待ちの事項を確かめる。止まった理由が解消していなければ、先にそれを片付ける。
+- 再開の前に、`docs/handover/CURRENT_STATE.md` と `PITFALLS.md` を読み、止まった理由と判断待ちの事項を確かめる。止まった理由が解消していなければ、先にそれを片付ける。引き継ぎ書は「今の目標」「次にやること」と、この RQ の判断待ちだけを読めばよい（ほかの RQ の判断待ちや測定の表は読み飛ばす）。
+- **再開の直後に読む量を絞る**: 区切り（`SPLIT_SESSION`、予算の STOP）の後の新しいセッションは、文脈が小さいうちに始まる。ここで読んだものは、以降のすべての呼び出しで読み直される。SKILL.md は、この文書と、残っている工程の統括スキル（実行の工程なら `researchkit-execute`）とそのステップのスキルの本文だけを読む。RQ の文書は `$RK brief <RQ_NAME> --step <NEXT_STEP>` で読み、`spec.md`・`plan.md`・`tasks.md` を全文で読まない。
 - `ensure` は、再利用した worktree にどのステップのコミットにも入っていない変更があると `UNCOMMITTED_CHANGES: <件数>` を出し、そのうち目録（`data/manifest.md`）にない `data/raw/` のファイルを `UNRECORDED_DATA: <件数>` と一覧で出す。前のセッションが収集（Q8）の途中で切れた跡である。続きのステップに入る前に、ファイルごとに出どころ（URL、statInfId）を確かめ、取り直して SHA-256 が一致したものを `$RK data add` で目録に載せる（`researchkit-status` の §8）。出どころが分からないファイルは根拠に使わず、ユーザーに確かめてから取り除く（自動モードでは取り除かずに残し、完了報告に挙げる）。
 - 設計の途中の worktree を `researchkit-execute` で再開しようとすると `DESIGN_INCOMPLETE`、実行に入った worktree を `researchkit-question` で再開しようとすると `EXECUTE_IN_PROGRESS` で止まる。`researchkit-all` は、どちらの途中からでも再開できる。
 
@@ -154,21 +155,7 @@ Web 検索には 1 セッションあたりの回数の上限がある。規則�
 
 ## 6. 引数の解釈と複数の RQ の進め方
 
-| 指定 | 例 | 動作 |
-|---|---|---|
-| 単一 | `1`、`003`、`003-market-size`、`market-size` | `$HELPER resolve` で 1 件に決める |
-| 範囲 | `002-005`、`002..005` | `$HELPER list` の結果から、番号が範囲内のものを着手順に選ぶ |
-| 全件 | `all` | `$HELPER next --phase <phase>` を、空になるまで繰り返す |
-| なし | （空） | `$HELPER next --phase <phase>` の 1 件。空なら対象なしと報告する |
-| 自動モード | `--auto`、`002-005 --auto`、`--auto all` | 上のいずれかと組み合わせる。質問せずに推奨案を採用して進める（§7） |
-
-- `--auto` は位置を問わない。RQ の指定を解釈する前に取り除き、`$HELPER` には渡さない。
-- 一覧にない新しい RQ は、`004-short-name` の形の完全名で指定する。ただし、RQ は `researchkit-questions` で `docs/questions/` に足してから進めることを勧める（概要ファイルがないと、状態の更新と `validate.py` の検証ができない）。
-- 複数の RQ は 1 件ずつ直列に進める。前の RQ の Q13（マージ）が終わってから、次の RQ の Q1 に進む。後の RQ は、前の RQ の成果（出典、`findings.md`、逆流の更新）を含む最新の `main` から分岐する。
-- 各 RQ の Q1 の前に §5 の予算を確かめる。STOP なら、残りの RQ に進まずに止まる。
-- `999-research-report` は、ほかのすべての RQ が `完了` か `人の作業待ち` になるまで `next` の候補にならず、`ensure` は `DEPENDENCY_PENDING` で止まる。範囲や `all` の最後に来たときに進める。
-- 範囲指定の途中で `ALREADY_DESIGNED` や `ALREADY_EXECUTED` になった RQ は、飛ばしたことを記録して次に進む。それ以外の理由で止まったときは、飛ばして続けるか中断するかをユーザーに確かめる（自動モードでは確かめずに飛ばす。§7『止まったときの扱い』）。
-- `all` で飛ばした RQ は、以降の `next` に `--skip <飛ばしたもの,...>` を付けて除く（付けないと、途中の worktree が残っている RQ がまた選ばれる）。
+RQ の指定は、単一（`003`、`market-size` など。`$HELPER resolve`）、範囲（`002-005`。着手順に）、`all`（`$HELPER next --phase <phase>` を空になるまで）、なし（`next` の 1 件）のどれかで、`--auto` は位置を問わず組み合わせる（`$HELPER` には渡さない）。複数の RQ は 1 件ずつ直列に進め、各 RQ の Q1 の前に §5 の予算を確かめる。`999-research-report` は最後に進む。`ALREADY_DESIGNED`・`ALREADY_EXECUTED` は飛ばして次へ、`all` で飛ばした RQ は `next --skip` で除く。表と規則の全文は [references/arguments.md](references/arguments.md)。
 
 ## 7. 自動モード
 

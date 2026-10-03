@@ -1077,6 +1077,23 @@ def brief_lines(body: str, width: int, keep=lambda l: True) -> list[str]:
     return out
 
 
+# 工程ごとに全文で要る節（ファイル、見出しの先頭の文字）。brief の要点に入らない節を、そのまま出す。
+BRIEF_STEP_SECTIONS = {
+    "Q8": [("spec.md", "範囲"), ("spec.md", "用語"), ("plan.md", "手法"), ("plan.md", "情報源と検索式"),
+           ("plan.md", "包含・除外の基準"), ("plan.md", "データ"), ("plan.md", "反対の証拠の探し方"),
+           ("plan.md", "出典 ID"), ("tasks.md", "Phase 1"), ("tasks.md", "Phase 2")],
+    "Q9": [("spec.md", "答えの形"), ("spec.md", "用語"), ("plan.md", "標本"), ("plan.md", "データ"),
+           ("plan.md", "分析の計画"), ("tasks.md", "Phase 3")],
+    "Q10": [("spec.md", "答えの形"), ("spec.md", "範囲外"), ("plan.md", "分析の計画"), ("tasks.md", "Phase 4")],
+    "Q11": [("spec.md", "答えの形")],
+    "Q12": [("spec.md", "答えの形")],
+}
+
+
+def strip_comments(text: str) -> str:
+    return re.sub(r"<!--.*?-->\n?", "", text, flags=re.S).strip()
+
+
 def cmd_brief(root: Path, args: argparse.Namespace) -> int:
     """RQ の要点（答えの形、判定の基準、仮説と反証条件、確度の付け方、検索数の見積もり、計画の変更、未完了のタスク）を短く出す。
 
@@ -1155,7 +1172,19 @@ def cmd_brief(root: Path, args: argparse.Namespace) -> int:
     out(f"- ファイル: {', '.join(files) or '（なし）'}")
     out(f"- 分析の出力: {', '.join(outs) or '（なし）'}")
     out(f"- 記録: {', '.join(reviews) or '（なし）'}")
-    out(f"- 全文: {rel(root, d)}/spec.md、plan.md、tasks.md（要る節だけを読む）")
+    if args.step:
+        for fname, title in BRIEF_STEP_SECTIONS[args.step]:
+            body = strip_comments(md_section(read(fname), title)) if read(fname) else ""
+            if body:
+                out("")
+                out(f"## {fname} の「{title}」（全文。{args.step} で使う）")
+                out(body)
+        out("")
+        out(f"- {args.step} に要る節は上に全文で出した。ほかの節が要るときだけ、その節を読む")
+    else:
+        steps = "、".join(BRIEF_STEP_SECTIONS)
+        out(f"- 全文: {rel(root, d)}/spec.md、plan.md、tasks.md（要る節だけを読む）")
+        out(f"- 工程に要る節: --step <{steps}>")
     return 0
 
 
@@ -1201,6 +1230,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("rq", help="RQ（番号か名前）")
     p.add_argument("--width", type=int, default=160, help="1 行の文字数の上限（既定 160）")
     p.add_argument("--max-tasks", type=int, default=20, help="未完了のタスクを出す件数の上限（既定 20）")
+    p.add_argument("--step", choices=list(BRIEF_STEP_SECTIONS),
+                   help="その工程に要る節（Q8 なら情報源と検索式・データ・出典 ID・収集のタスク）も全文で出す")
     p = sub.add_parser("estat", help="e-Stat の一覧を短く表示する（list）、表を取得する（get）")
     p.add_argument("action", choices=["list", "get"])
     p.add_argument("target", nargs="?", help="list: 政府統計コード（8 桁）か一覧の URL / get: statInfId")

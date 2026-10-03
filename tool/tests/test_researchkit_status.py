@@ -420,7 +420,15 @@ class ResearchkitStatusTest(unittest.TestCase):
             "# 主張\n\n## 答え\n\n年 0.56% 減った（C1）。\n\n## 主張\n\n| ID | 主張 | 根拠 | 確度 | 反証・限界 |\n|---|---|---|---|---|\n"
             "| C1 | 年 -0.56%{N:analysis/out/c.json#cagr.main} 減った | S003-0001 | 確実 | 長い限界 |\n\n"
             "## 仮説ごとの判定\n\n| 仮説 | 判定 |\n|---|---|\n| H2 | 保留 |\n", encoding="utf-8")
+        out = self.out("brief", "3", "--step", "Q8")
+        self.assertIn("## spec.md の「範囲」（全文。Q8 で使う）", out)  # その工程に要る節は全文で出す
+        self.assertIn("- 全国", out)
+        self.assertNotIn("## plan.md の「確度の付け方」", out)  # Q8 に要らない節は出さない
+        self.assertIn("Q8 に要る節は上に全文で出した", out)
+        self.assertNotIn("--step <", out)
         out = self.out("brief", "3")
+        self.assertIn("--step <Q8、Q9、Q10、Q11、Q12>", out)
+        self.assertNotIn("（全文。", out)
         self.assertIn("## 答え（findings.md）", out)
         self.assertIn("年 0.56% 減った（C1）。", out)
         self.assertIn("| C1 | 年 -0.56% 減った | 確実 |", out)  # 数値の参照の記号と根拠・限界の欄は省く

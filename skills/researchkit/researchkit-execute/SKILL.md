@@ -52,7 +52,7 @@ $ARGUMENTS
 
 ### 入力情報
 
-まず `$RK brief <RQ_NAME>` で RQ の要点を読み、下の文書は要る節だけを読む（全文を読まない。steering の「RQ の要点を短く読む」）。
+各ステップの始めに `$RK brief <RQ_NAME> --step <ステップ>`（Q8〜Q12）で、RQ の要点と、そのステップに要る節の全文（Q8 なら範囲・用語・手法・情報源と検索式・包含と除外の基準・データ・反対の証拠の探し方・出典 ID・収集のタスク）を読む。下の文書は、`brief` に出ない節が要るときだけ、その節を読む（`spec.md`・`plan.md`・`tasks.md` を全文で読まない。同じセッションで前のステップの `brief` を読んでいれば、ステップに要る節だけを読み足す。steering の「RQ の要点を短く読む」）。
 
 - `RQ_DIR/spec.md`（問い、答えの形、判定の基準、範囲、用語）、`plan.md`（手法、検索式、標本、分析の計画、反証条件、計画の変更）、`tasks.md`
 - 手法の参照文書 `researchkit-method/references/`（`plan.md` で選んだ手法の分。`desk.md`、`literature.md`、`data.md`、`qualitative.md`）
@@ -64,7 +64,8 @@ $ARGUMENTS
 
 1. **始める前に** `$RK budget --step Q8 --rq <RQ_NAME>` を実行する。STOP なら Q8 に入らずに止まる（Q7-2 までのチェックポイントは記録済み）。
 2. `researchkit-collect` の手順で、`tasks.md` の収集のフェーズのタスクを実行する。要点は次のとおりである。
-   - 出典 ID は `$RK sources next <NNN> --count <k>` で取る。既存の出典は新しく作らず、`used_in` に足す。サブエージェントで並行に集めるときは、ID の範囲を分ける（steering の「サブエージェントに任せるとき」）。
+   - 出典 ID は `$RK sources next <NNN> --count <k>` で取る。既存の出典は新しく作らず、`used_in` に足す。
+   - 系統が 2 つ以上あれば、文献・デスク・統計・反対の証拠の各系統をサブエージェントに任せ、親は自分で収集しない（割り振り、ID の範囲、まとめ、抜き取りの確認だけ。`researchkit-collect` の §7）。
    - AI が挙げた文献・統計は 1 件ずつ実在を確かめる。確かめられないものは等級 `D` にし、根拠に使わない。
    - 検索式、データベース、期間、件数を `search-log.md` に残す。見つからなかったことも書く。
    - 仮説に反する証拠を探す検索も、`plan.md` のとおりに行う。
