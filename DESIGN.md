@@ -113,6 +113,7 @@ gamekit-review と同じく、軸ごとに文脈を持たないサブエージ�
 |---|---|---|---|
 | `researchkit.py`、`rklib.py` | `researchkit-status/scripts/` | `init`、`config get`、`bootstrap`、`status`、`handover`、`doctor`、`pitfall`、`budget`、`hooks install`、`sources next`、`sources list`、`estat list`・`estat get`（`estat.py`）、`data add` | gamekit.py、novelkit.py |
 | `count_search.py` | 同上 | Web 検索の回数を数えるフック | novelkit |
+| `rk` | `skills/researchkit/` | 各スクリプトへの入口（`rk <command>`、`rk helper`、`rk check`、`rk num`、`rk validate`）。1 語で呼べるので zsh でも変数に入れて使える。ディレクトリではないので、スキルとしてはリンクしない | — |
 | `worktree_helper.py` | `researchkit-worktree/scripts/` | worktree、ステップ判定、`status`、`next`、`human-tasks`、`sync-status`、`abort` | gamekit |
 | `validate.py` | `researchkit-questions/scripts/` | RQ 一式の検証（番号、決定とのつながり、spec_order、仮説との対応） | gamekit-features |
 | `check.py` | `researchkit-check/scripts/` | 主張ごとの出典 ID の有無、出典の必須項目（URL か書誌、参照日、等級）、使われていない出典、DOI の書式、`--online` で URL と DOI の到達性、データの目録と `data/raw/` の照合（目録にない・ない・SHA-256 の違い） | novelkit-check |

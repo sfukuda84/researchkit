@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""rk - researchkit のスクリプトの入口
+
+1 語で呼べるようにするための入口である。`RK="python3 <パス>"` のように空白を含む値を変数に入れて `$RK budget` と
+展開すると、zsh（macOS の既定のシェル）では語に分かれずに失敗する。`skills/researchkit/rk` は 1 語なので、
+変数に入れても、そのまま書いても、どのシェルでも動く。
+
+使い方（プロジェクトのルートか worktree の中で）:
+  skills/researchkit/rk <コマンド> ...          researchkit.py（status、budget、handover、estat、data、sources など）
+  skills/researchkit/rk helper <コマンド> ...   worktree_helper.py（ensure、checkpoint、finish、next など）
+  skills/researchkit/rk check [...]             check.py（出典の参照、出典台帳、データの目録）
+  skills/researchkit/rk num [...]               numbers.py（数値の突き合わせ）
+  skills/researchkit/rk validate [...]          validate.py（RQ 一式の検証）
+Windows では `py -3 skills/researchkit/rk ...` と書く（先頭行の python3 の指定が効かないため）。
+呼ばれた場所の skills/researchkit/ のスクリプトを使う（worktree の中なら worktree のもの）。終了コードはそのまま返す。
+標準ライブラリだけで書く（Python 3.9 以上）。
+"""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+TOOLS = {
+    "helper": HERE / "researchkit-worktree" / "scripts" / "worktree_helper.py",
+    "check": HERE / "researchkit-check" / "scripts" / "check.py",
+    "num": HERE / "researchkit-check" / "scripts" / "numbers.py",
+    "validate": HERE / "researchkit-questions" / "scripts" / "validate.py",
+}
+DEFAULT = HERE / "researchkit-status" / "scripts" / "researchkit.py"
+
+
+def main(argv: list[str]) -> int:
+    if argv and argv[0] in ("-h", "--help") and len(argv) == 1:
+        print(__doc__.strip())
+        return 0
+    if argv and argv[0] in TOOLS:
+        script, args = TOOLS[argv[0]], argv[1:]
+    else:
+        script, args = DEFAULT, argv
+    if not script.is_file():
+        print(f"ERROR: {script} がない（skills/researchkit/ を確かめる）", file=sys.stderr)
+        return 1
+    return subprocess.run([sys.executable, str(script), *args]).returncode
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

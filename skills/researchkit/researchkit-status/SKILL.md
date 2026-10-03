@@ -16,10 +16,11 @@ disable-model-invocation: false
 ## 1. ヘルパースクリプト
 
 ```bash
-python3 <skills>/researchkit-status/scripts/researchkit.py [--root <dir>] <command> ...
+skills/researchkit/rk [--root <dir>] <command> ...
+# 同じ: python3 <skills>/researchkit-status/scripts/researchkit.py [--root <dir>] <command> ...
 ```
 
-以降、この呼び出しを `$RK` と書く（steering の「エージェントの行動規範」と同じ）。`<skills>` は、このスキルが置かれた skills ディレクトリ（`.claude/skills`、`.agents/skills`、`.kiro/skills` のいずれか）である。`python3` がない環境では `python` または `py -3` に読み替える。`--root` を省くと、`.researchkit/config.yaml`（なければ `.git`）を上へ探してプロジェクトのルートにする。worktree の中では worktree がルートになる。
+以降、この呼び出しを `$RK` と書く（steering の「エージェントの行動規範」と同じ。`rk` は 1 語で呼べる入口で、zsh でも変数に入れて使える。Windows では `py -3 skills/researchkit/rk`）。`<skills>` は、このスキルが置かれた skills ディレクトリ（`.claude/skills`、`.agents/skills`、`.kiro/skills` のいずれか）である。`python3` がない環境では `python` または `py -3` に読み替える。`--root` を省くと、`.researchkit/config.yaml`（なければ `.git`）を上へ探してプロジェクトのルートにする。worktree の中では worktree がルートになる。
 
 | コマンド | 用途 |
 |---|---|
