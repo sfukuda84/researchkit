@@ -60,6 +60,10 @@ session:
       Q12: 15
       rq: 50
   stop_after_bootstrap: true  # 調査全体の工程（R12）の後は、必ずセッションを区切る
+  # RQ の工程の途中でセッションを区切るステップ（例: [Q10]）。そのステップの checkpoint が SPLIT_SESSION を出し、
+  # researchkit-all・researchkit-execute は引き継ぎ書を更新して止まる。親の文脈は工程の後半ほど重くなるので、
+  # Q10 の後で区切ると Q11・Q12（5 軸レビュー）を軽い文脈で進められる。既定は区切らない
+  split_after: []
   rqs_unmetered: 1          # 回数を数えられない環境で、1 セッションに進める RQ の数
 
 # 確度の段階（強い順）。憲章（R8）で変えたときは、ここも合わせる。

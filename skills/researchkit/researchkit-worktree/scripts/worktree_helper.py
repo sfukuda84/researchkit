@@ -154,6 +154,35 @@ def read_config_paths(root: Path) -> dict[str, str]:
     return found
 
 
+def read_split_after(root: Path) -> list[str]:
+    """.researchkit/config.yaml の session.split_after（区切るステップの一覧）を読む。インラインの [Q10] と、ブロックの - Q10 の両方。"""
+    path = root / CONFIG_REL
+    if not path.is_file():
+        return []
+    lines = [re.sub(r"(^|\s)#.*$", "", raw).rstrip() for raw in path.read_text(encoding="utf-8").splitlines()]
+    in_session, steps = False, []
+    for i, line in enumerate(lines):
+        if not line.strip():
+            continue
+        if not line.startswith((" ", "\t")):
+            in_session = line.strip() == "session:"
+            continue
+        m = re.match(r"^(\s+)split_after:\s*(.*)$", line) if in_session else None
+        if not m:
+            continue
+        value = m.group(2).strip()
+        if value.startswith("["):
+            steps = [x.strip().strip("'\"") for x in value.strip("[]").split(",") if x.strip()]
+        else:
+            for nxt in lines[i + 1:]:
+                item = re.match(r"^\s+-\s*(\S+)", nxt)
+                if not item:
+                    break
+                steps.append(item.group(1).strip("'\""))
+        break
+    return steps
+
+
 def resolve_main_branch() -> str:
     """マージ先のブランチ。RESEARCHKIT_MAIN_BRANCH、クラウドセッションの作業ブランチ、main の順に決める。
 
@@ -706,6 +735,9 @@ def cmd_checkpoint(args: list[str]) -> None:
     forget_history()
     print(f"CHECKPOINT: {step} {git_out(['rev-parse', '--short', 'HEAD'], cwd=wt)}")
     print(f"NEXT_STEP: {next_step(name, 'all')}")
+    if step in read_split_after(REPO_ROOT):
+        print(f"SPLIT_SESSION: {step} の後でセッションを区切る設定（session.split_after）。引き継ぎ書を更新して止まり、"
+              "新しいセッションで同じスキルを同じ引数で実行して再開する（親の文脈を軽くするため）")
 
 
 def cmd_finish(args: list[str]) -> None:

@@ -219,6 +219,22 @@ class WorktreeHelperScenario(unittest.TestCase):
         self.assertIn("  - data/raw/食料需給表_2024.csv", out)
         self.assertNotIn("  - data/raw/listed.csv", out)
 
+    def test_checkpoint_reports_split_session(self) -> None:
+        cfg = self.repo / ".researchkit" / "config.yaml"
+        cfg.parent.mkdir(parents=True)
+        cfg.write_text("paths:\n  studies: studies\nsession:\n  web_search_limit: 200\n  split_after: [Q10]  # 区切る\n",
+                       encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-qm", "config")
+        self.assertIn("WORKTREE_STATE: created", self.out("ensure", "1", "--phase", "all"))
+        out = self.out("checkpoint", "1", "Q9", "x: Q9")
+        self.assertNotIn("SPLIT_SESSION", out)
+        out = self.out("checkpoint", "1", "Q10", "x: Q10")
+        self.assertIn("SPLIT_SESSION: Q10 の後でセッションを区切る設定", out)
+        # ブロックの形のリストも読む
+        cfg.write_text("session:\n  split_after:\n    - Q8\n    - Q11\n  rqs_unmetered: 1\n", encoding="utf-8")
+        self.assertIn("SPLIT_SESSION: Q11", self.out("checkpoint", "1", "Q11", "x: Q11"))
+
     def test_report_waits_for_other_rqs(self) -> None:
         self.assertIn("DEPENDENCY_PENDING", self.out("ensure", "999", "--phase", "all"))
         self.assertEqual(self.code("ensure", "999", "--phase", "all"), 3)

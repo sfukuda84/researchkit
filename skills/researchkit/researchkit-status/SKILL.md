@@ -35,6 +35,7 @@ skills/researchkit/rk [--root <dir>] <command> ...
 | `$RK hooks install` | `.claude/settings.json` に、Web 検索の回数を数えるフック（`count_search.py`）を登録する。既存の設定は残す。`.gitignore` に `.researchkit/usage/` を足す。`new-researchkit-project` が自動で行う |
 | `$RK sources next <NNN> [--count <k>]` | RQ `<NNN>` の次の空き出典 ID を `k` 個出す（§6） |
 | `$RK sources list [--grade A,B] [--rq <NNN>] [--unused]` | 出典の一覧（ID、等級、種類、題名、使った RQ）を表で出す（§6） |
+| `$RK brief <RQ> [--width <n>] [--max-tasks <n>]` | RQ の要点を短く出す。spec の問い・小問・つながる決定と仮説・判定の基準、plan の仮説と反証条件・確度の付け方・検索数の見積もり・計画の変更、tasks の未完了のタスク、成果物の一覧。表の行は `--width`（既定 160）文字で切り詰める。全文を読む代わりに使い、要る節だけを読む |
 | `$RK estat list <政府統計コード\|一覧の URL> [--grep <語>] [--limit <n>]` | e-Stat のファイルの一覧を短く出す（§8）。分類のページなら下の階層の名前・件数・公開日・URL、表のページなら statInfId・形式・表番号・題名・調査年月・公開日 |
 | `$RK estat get <statInfId> --kind <0\|1\|2\|4> --out <保存先>` | e-Stat の表を取得する（§8）。中身の形式（xls、xlsx、csv、pdf、zip）に合う拡張子で保存し、SHA-256 と大きさを出す。中身が HTML（エラーのページ）なら保存せずに終了コード 1 |
 | `$RK data add <file> --source <ID> --url <URL> --desc <内容> --rq <NNN> [--license <規約>] [--method <方法>] [--accessed <日付>]` | データの目録（`data/manifest.md` の「ファイル」の表）に 1 行足す（§8）。SHA-256・大きさ・置き場所（raw / large）はファイルから求める。同じファイルの行があれば止まる |

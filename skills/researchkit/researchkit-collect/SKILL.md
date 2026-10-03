@@ -66,67 +66,15 @@ $ARGUMENTS
 
 ### 3.2 実在の確認
 
-出典の種類ごとに、次のどれかで確かめ、確かめた方法と日付を `verified_by` に書く。
-
-| 種類（`type`） | 確かめ方 |
-|---|---|
-| `paper` | DOI を `https://doi.org/<DOI>` で解決し、題名・著者・年・誌名が一致することを確かめる。DOI がなければ、出版社・PubMed・CiNii Research・J-STAGE などのデータベースのページで確かめる |
-| `book` | 出版社のページ、国立国会図書館サーチ、CiNii Books、ISBN で確かめる |
-| `stat` | 発表元（省庁、統計局、国際機関）のページで、表の番号と数値を確かめる。e-Stat など公式の配布元を優先する |
-| `report` | 発行元（調査会社、業界団体、企業）のページで確かめる。有料レポートの中身は、公開の要約で確かめられる範囲だけを使う |
-| `web` | ページを開いて確かめる。更新日を控える |
-| `dataset` | 配布元のページで、版・取得日・ライセンスを確かめる |
-| `interview` | 実施の記録（日時、対象者の記号、同意の有無）があることを確かめる。実施は `[人]` |
-| `internal` | 社内資料の名前・版・入手日を、入手した人に確かめる |
-
-- **確かめられなかったもの**（DOI が解決しない、題名と著者が一致しない、ページが見つからない、AI が挙げただけ）は、等級 `D` で登録し、`verified_by` に `未確認: <試したこと>` と書く。根拠に使わない。消さないのは、同じ候補を後でもう一度探さないためである。
-- **ページを開けなかった出典**（403、動的なページ）: 検索結果の要約や集計サイトで確かめた場合は、その旨を `verified_by` に書き、等級を 1 段下げる。
-- **孫引きをしない。** 二次資料が一次資料を引いているときは、一次資料を探して確かめる。一次資料に当たれなければ、二次資料を出典にして「一次資料 <書誌> は未確認」とメモに書き、一次資料を確かめたように書かない。
+出典の種類ごとに実在を確かめ、確かめた方法と日付を `verified_by` に書く（論文は DOI を解決して題名・著者・年・誌名を照合、統計は発表元か e-Stat の表、web はページを開く）。確かめられなかったものは等級 `D` で登録して根拠に使わない（`verified_by` に `未確認: <試したこと>`）。ページを開けず検索の要約で確かめたものは等級を 1 段下げる。孫引きをしない。種類ごとの確かめ方の表は [references/sources.md](references/sources.md)。
 
 ### 3.3 等級
 
-等級は憲章の定めに従う。既定（steering）は次のとおりである。
-
-| 等級 | 例 |
-|---|---|
-| `A` | 一次資料、査読つき論文、公的統計、企業の公式の開示（有価証券報告書、決算説明資料） |
-| `B` | 信頼できる二次資料（大手の報道、業界団体、調査会社の公開の要約） |
-| `C` | そのほかの二次資料（ブログ、まとめ、検索の要約） |
-| `D` | 未確認（実在を確かめられない、AI が挙げただけ）。根拠に使わない |
-
-`primary` は、その出典が一次資料か（`true`／`false`）である。等級と別に付ける（一次資料でも、作り手の利害がある資料はメモに書く）。
+等級は憲章に従う（既定: `A` 一次資料・査読つき論文・公的統計・公式の開示、`B` 信頼できる二次資料、`C` そのほかの二次資料、`D` 未確認で根拠に使わない）。`primary`（一次資料か）は等級と別に付ける。詳細は [references/sources.md](references/sources.md)。
 
 ### 3.4 ファイルの形
 
-`sources/<ID>.md`。フロントマターの項目は steering のとおりで、様式は `researchkit-check` の `templates/source.md` である。`000-research-foundation.md` で形式を足していれば、それにも従う。例:
-
-```markdown
----
-id: S001-0003
-type: stat
-title: 令和6年 〇〇統計調査 結果の概要
-author: 〇〇省
-publisher: 〇〇省
-published: 2025-06-30
-url: https://www.example.go.jp/toukei/r6/gaiyou.pdf
-doi:
-accessed: 2026-10-03
-grade: A
-primary: true
-verified_by: 2026-10-03 発表元のページで PDF を開き、表 3 の数値を確かめた
-used_in: ["001"]
----
-
-## 概要
-
-<何の資料か。1〜3 行>
-
-## 注意
-
-<対象・期間・定義の注意。例: 従業員 5 人以上の事業所だけが対象。2023 年に定義が変わった>
-```
-
-`url`・`doi`・書誌（`author` と `publisher`）のどれかは必ず埋める。
+`sources/<ID>.md`。フロントマターは steering の項目どおりで、様式は `researchkit-check` の `templates/source.md`。`url`・`doi`・書誌（`author` と `publisher`）のどれかは必ず埋める。例は [references/sources.md](references/sources.md)。
 
 ## 4. 抜き書き（`studies/<NNN-name>/evidence/`）
 
@@ -158,27 +106,11 @@ python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read(
 
 ## 6. 検索ログ（`studies/<NNN-name>/search-log.md`）
 
-様式は `000-research-foundation` で決めた形（既定は `researchkit-foundation` の検索ログの様式。`tasks.md` の準備のタスクで RQ のディレクトリに用意する）に従う。用意されていなければ、その様式で作る。
-
-- 検索した**すべて**の検索式を、1 回の検索（1 つの情報源に 1 つの検索式）につき 1 行で書く。採用がない検索も書く。ヒット件数は、検索先が示す数（「約」を含む）を写す。採用の欄には採用した件数を書き、登録した出典 ID はメモの欄に書く（様式の記入例のとおり）。
-- **反証の検索**（`plan.md` の「反対の証拠の探し方」と反証条件に当たる証拠を探す検索）には、メモに「反証の検索（H<n>）」と書く。Q11 の Counter 軸が、この行を見て足りない検索を判断する。
-- 「**見つからなかったこと**」の節に、探したが見つからなかった事実・資料・データを、調べた範囲（情報源、検索式の行の番号、期間）と一緒に書く。
-- 文献レビューでは、引用をたどった記録と PRISMA 2020 の件数の節も埋める。
-- `plan.md` の検索式・データベース・期間から変えたことは、「計画との違い」の節と `plan.md` の「計画の変更」の両方に書く。
+すべての検索を 1 回 1 行で書く（採用がない検索も。件数は検索先が示す数）。反証の検索にはメモに「反証の検索（H<n>）」と書く。「見つからなかったこと」の節に、探したが見つからなかったものと調べた範囲を書く。計画から変えた検索は「計画との違い」と `plan.md` の「計画の変更」の両方に書く。文献レビューの記録（引用をたどった記録、PRISMA 2020 の件数）を含む詳細は [references/search-log.md](references/search-log.md)。
 
 ## 7. サブエージェントでの並行収集
 
-検索の系統（`plan.md` の検索式のまとまり、データ源、手法）が独立しているときは、サブエージェントに分けて並行に集めてよい。分担は steering の「サブエージェントに任せるとき」に従う。
-
-- **モデルと数**: サブエージェントのモデルは `$RK config get subagents.model`（既定 `sonnet`）、同時に動かす数は `subagents.max_parallel`（既定 3）までにする。系統がそれより多ければ組に分け、前の組が終わってから次の組を出す。
-- **出力**: ダウンロードや取得の結果はファイルに保存させ、最終回答は登録した出典 ID の範囲・件数・見つからなかったこと・判断が要る点だけにさせる（steering「コマンドの出力を短くする」）。
-
-1. **ID の範囲を分ける**: `plan.md` の「出典 ID」の節に並行の割り当てがあれば、それに従う。なければ、親が `$RK sources next <NNN>` で最初の空きを得て、サブエージェントごとに重ならない範囲を割り当て、`plan.md` の同じ節に書く（例: 空きが `S003-0013` なら、A に `0013`〜`0099`、B に `0100`〜`0199`、C に `0200`〜`0299`）。サブエージェントは、範囲の外の ID を使わない。使わなかった番号は欠番でよい。
-2. **渡すもの**: このスキルの SKILL.md と `templates/evidence.md`、担当のタスク ID と検索式、`spec.md`・`plan.md` のパス、ID の範囲、書いてよいファイル（`sources/<範囲の ID>.md`、`evidence/<範囲の ID>.md`、`data/raw/` の担当のファイル、`studies/<NNN-name>/search-log.d/<担当>.md`）。
-3. **書かせないもの**: `tasks.md`、`search-log.md`、`data/manifest.md`、既存の出典ファイル。これらは親がまとめて書く。既存の出典を使いたいときは、その ID を最終回答で返させる（親が `used_in` に足す）。
-4. **返させるもの**: 登録した出典の一覧、目録に足す行、実在を確かめられなかった候補、手順どおりに進めにくかった点。
-5. **親がまとめる**: 担当ごとの検索ログを `search-log.md` に移して `search-log.d/` を消す。目録の行を `data/manifest.md` に足す。同じ URL・DOI の出典が複数の担当にあれば、小さい ID に寄せ、他方の抜き書きを移し、消した ID を完了報告に書く。
-6. **報告を確かめる**: サブエージェントの報告の件数・文献名・数値は、成果物のファイルと出典で確かめてから使う。抜き取りで、出典のページを親が開いて引用と照合する。
+検索の系統が独立していればサブエージェント（`subagents.model`、同時に `subagents.max_parallel` まで）に分けてよい。親が出典 ID の範囲を分けて渡し、`tasks.md`・`search-log.md`・`data/manifest.md`・既存の出典ファイルは親だけが書く。サブエージェントの報告の件数・文献名・数値は、成果物のファイルと出典で確かめてから使う。渡すもの・書かせないもの・まとめ方の手順は [references/parallel.md](references/parallel.md)。
 
 ## 8. タスクの実行と `[人]`
 
@@ -190,25 +122,11 @@ python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read(
 
 ## 9. `000-research-foundation` のとき
 
-主張は作らない。次を整える（steering「RQ の工程」）。
-
-- `sources/` の共通の出典（`S000-*`。複数の RQ で使う統計や基本文献）の登録
-- 用語集（`docs/glossary.md`）の項目の定義と、その出典
-- `data/manifest.md` の表の用意と、共通のデータの取得
-- 分析環境の用意（`commands.analysis` が実行できること。確かめるのは Q9）
-- `search-log.md` の形式の見本（`000-research-foundation.md` の定め）
+主張は作らない。共通の出典（`S000-*`）、用語集、データの目録、分析環境の用意、検索ログの形式の見本を整える。詳細は [references/special.md](references/special.md)。
 
 ## 10. 自動モード（`--auto`）
 
-| 場面 | 自動モードでの動作 |
-|---|---|
-| 検索式の言い換え・追加（`plan.md` の範囲の中） | 行い、`search-log.md` に書く。範囲（地域・期間・対象）を変える追加はしない |
-| 検索式・データ源の変更 | 推奨案を採用し、`plan.md` の「計画の変更」と `studies/<NNN-name>/auto-decisions.md` に記録する |
-| 等級の判断に迷う出典 | 低い方の等級にし、`auto-decisions.md` に記録する |
-| 有料・会員限定の資料 | 入手しない。`[人]` のタスクを足す提案を完了報告に書く |
-| `[人]` のタスク | 実行せず、`[x]` にしない（§8） |
-
-止まる場面: 予算の STOP、§8 の最後の場合、`docs/method.md` や憲章の変更が要る場合、同じ原因の取得の失敗が 3 回続いた場合。
+`plan.md` の範囲の中の検索式の言い換えは行って記録する。検索式・データ源の変更は推奨案を採って `plan.md` の「計画の変更」と `auto-decisions.md` に記録する。等級に迷う出典は低い方にする。有料資料は入手せず `[人]` のタスクを提案する。予算の STOP、根拠の大半が `[人]` 待ち、`docs/method.md` や憲章の変更が要る、同じ取得の失敗が 3 回、のときは止まる。表は [references/special.md](references/special.md)。
 
 ## 11. 仕上げ
 
@@ -219,22 +137,8 @@ python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read(
 
 ## 12. 出力
 
-- `sources/<ID>.md`（新規と、`used_in` を足した既存のもの）
-- `studies/<NNN-name>/evidence/<ID>.md`（様式: [templates/evidence.md](./templates/evidence.md)）
-- `studies/<NNN-name>/search-log.md`
-- `data/raw/`、`data/manifest.md`（データを取得したとき）
-- `studies/<NNN-name>/tasks.md`（収集のタスクの `- [x]`）
-- `studies/<NNN-name>/plan.md` の「計画の変更」（変えたとき）
-
-次の工程は `researchkit-analysis`（Q9）である。チェックポイント（`research(<RQ>): 収集`）は呼び出し元（`researchkit-execute`・`researchkit-all`）が記録する。単独で実行したときは、最後に `$HELPER checkpoint <RQ_NAME> Q8 "<『ステップ番号』の節の subject>"` を記録する（`researchkit-worktree`）。RQ の工程として続けるときは `researchkit-execute` を案内する。
+出力の一覧（`sources/`、`evidence/`、`search-log.md`、`data/`、`tasks.md`、`plan.md` の計画の変更）と、次の工程（`researchkit-analysis`、Q8 のチェックポイントは呼び出し元が記録）は [references/special.md](references/special.md)。
 
 ## 13. 完了報告
 
-- 実行したタスクと、残った `[人]` のタスク（人が行うことと、完了の確かめ方）
-- 登録した出典の件数（等級別、一次資料の数）と、`used_in` を足した既存の出典
-- 実在を確かめられなかった候補（等級 `D`）
-- 検索の件数（ログの行数、うち反証の検索）と、見つからなかったことの要約
-- 取得したデータと目録の行
-- `plan.md` の計画の変更（あれば）と、自動モードで記録した判断
-- `$CHECK` の結果
-- 次の案内: `researchkit-analysis`（Q9）
+完了報告の項目（実行したタスクと残った `[人]`、出典の件数〈等級別〉、等級 `D`、検索の件数と見つからなかったこと、データと目録、計画の変更と自動の判断、`$CHECK` の結果、次の案内）は [references/special.md](references/special.md)。

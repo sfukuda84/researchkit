@@ -52,6 +52,8 @@ $ARGUMENTS
 
 ### 入力情報
 
+まず `$RK brief <RQ_NAME>` で RQ の要点を読み、下の文書は要る節だけを読む（全文を読まない。steering の「RQ の要点を短く読む」）。
+
 - `RQ_DIR/spec.md`（問い、答えの形、判定の基準、範囲、用語）、`plan.md`（手法、検索式、標本、分析の計画、反証条件、計画の変更）、`tasks.md`
 - 手法の参照文書 `researchkit-method/references/`（`plan.md` で選んだ手法の分。`desk.md`、`literature.md`、`data.md`、`qualitative.md`）
 - 憲章 `.researchkit/memory/constitution.md`、品質基準 `docs/quality.md`、用語集 `docs/glossary.md`、データの目録 `data/manifest.md`
@@ -86,7 +88,7 @@ $ARGUMENTS
 2. 仮説ごとに、反証条件に当たったかを書く。前提や仮説が崩れたら、`docs/study/hypotheses.md`、`issue-tree.md`、`docs/questions/` にも戻して直す（逆流）。
 3. `$CHECK --rq <NNN>` と `$NUM --rq <NNN>` のエラーを 0 件にする。
 4. `tasks.md` の残作業を確かめ、AI のタスクがすべて `- [x]` になっていることを確かめる。
-5. `checkpoint <RQ_NAME> Q10` を記録する。
+5. `checkpoint <RQ_NAME> Q10` を記録する。`SPLIT_SESSION` が出たら（`session.split_after`）、Q11 に入らずに引き継ぎ書を更新して止まり、新しいセッションで同じスキルを同じ引数で実行して再開する（`researchkit-all` の §2 の手順 4 と同じ）。ほかのステップの後で出たときも同じ。
 
 ### Q11: 5 軸レビュー 1 回目と修正
 

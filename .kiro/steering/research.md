@@ -167,6 +167,7 @@ ID は振り直さない。取り下げたものも消さずに印を付ける�
 Web 検索には 1 セッションあたりの回数の上限がある（Claude Code で観測した値は 200 件）。調査は検索が多いので、セッションを工程の境目で区切る。
 
 - **必ず区切る**: 調査全体の工程（R12）の後。新しいセッションで `researchkit-all` を始める。
+- **設定で区切る**: `session.split_after`（既定は空。例: `[Q10]`）に入っているステップのチェックポイントの後。`checkpoint` が `SPLIT_SESSION` を出したら、引き継ぎ書を更新して止まり、新しいセッションで同じスキルを同じ引数で実行して再開する。親の文脈は工程の後半ほど重くなる（003 の実測で Q8 の 1 回あたり約 19 万トークンが Q12 では約 51 万）ので、Q10 の後で区切ると Q11・Q12 を軽い文脈で進められる。
 - **回数を数えて区切る**: プロジェクトを作るときに `.claude/settings.json` にフックが入り、セッションごとの Web 検索の回数を `.researchkit/usage/` に記録する。次の場所で `$RK budget --step <STEP>` を実行する: R2・R6 の前、RQ に入る前（`--step rq --rq <RQ>`）、Q8・Q11 の前（`--rq <RQ>` を付ける。Q11 は Q12 の分も含めて見る）。見積もりは、RQ の `plan.md` の「検索数の見積もり」、なければ手法ごとの既定（`session.estimates_by_method`）、なければ `session.estimates` を使う。`VERDICT: STOP`（終了コード 4）なら、その工程に入らずに止まる。自動モードでも止まる。これは失敗ではなく区切りであり、新しいセッションで同じスキルを同じ引数で実行すれば続きから再開する。
 - **数えられない環境**（`VERDICT: UNMETERED`）では、1 セッションで `session.rqs_unmetered`（既定 1）件の RQ を終えたら止まる。記録が別のセッションのもの（プロジェクトの外で Claude Code を起動したなど）のときも `UNMETERED` になる。Claude Code はプロジェクトのルートで起動する。
 - 見積もりは `.researchkit/config.yaml` の `session.estimates` で変える。
@@ -193,6 +194,7 @@ Web 検索には 1 セッションあたりの回数の上限がある（Claude 
 - **コマンドの出力を短くする**: 統計の取得、ファイルのダウンロード、集計・分析のスクリプトの出力は、会話に溜まって以降のすべての呼び出しを重くする。結果はファイル（`data/raw/`、`analysis/out/`、`/tmp` の作業用ファイルなど）に書き、会話には件数・パス・要約・確かめに要る数行だけを返す。目安は 1 回あたり `output.max_lines`（既定 40）行まで。表やファイルの中身を確かめるときは、`head`、`wc -l`、列名の一覧、必要な行の抜き出しで見る。`curl` は `-sS -o <ファイル>` で保存し、本文を画面に出さない。サブエージェントにも同じ規則を渡し、最終回答は要点だけにさせる。
 - スクリプトは Python（3.9 以上、標準ライブラリのみ）で書かれており、`python3 <スクリプト>` の形で呼ぶ。`python3` がない環境では `python` または `py -3` に読み替える。分析のコードは、`.researchkit/config.yaml` の `commands.analysis` を正とし、依存を持ってよい（既定は `uv run --with pandas python {script}` など。`researchkit-method` が決める）。
 - 以降、`$RK` は `skills/researchkit/rk`、`$HELPER` は `skills/researchkit/rk helper`、`$CHECK` は `skills/researchkit/rk check`、`$NUM` は `skills/researchkit/rk num` を表す（パスはプロジェクトのルートからの相対。worktree の中でも同じ形で、その worktree のスクリプトを使う）。`rk` は researchkit-status・researchkit-worktree・researchkit-check の各スクリプトに渡す入口で、1 語なのでシェルの変数に入れても zsh で動く（`RK="python3 …/researchkit.py"` のように空白を含む値を変数に入れて `$RK budget` と展開すると、zsh では語に分かれずに失敗する。`rk` を使えばこの罠を踏まない）。Windows では `py -3 skills/researchkit/rk …` と書く。各スクリプトを直接 `python3 skills/researchkit/<スキル>/scripts/<名前>.py` で呼んでもよい（変数に入れない）。
+- **RQ の要点を短く読む**: 実行の工程（Q8〜Q12）で RQ の spec・plan・tasks を読むときは、全文を読まずに、まず `$RK brief <RQ>` で要点（問い、小問、つながる決定と仮説、判定の基準、仮説と反証条件、確度の付け方、検索数の見積もり、計画の変更、未完了のタスク、成果物）を見る。全文が要る場面（確度を付ける、計画を直す）は、該当の節だけを読む。読んだ文書は以降のすべての呼び出しで読み直されるので、最初に読む量がそのまま利用量に効く。
 - **公的統計の取得**: e-Stat の表は、一覧の HTML を自分で読まずに `$RK estat list <政府統計コード|一覧の URL> [--grep <語>]` で分類と表（statInfId・題名・公開日・形式）を見て、`$RK estat get <statInfId> --kind <0|1|2> --out data/raw/<名前>` で取得する（中身の形式に合う拡張子で保存し、SHA-256 を出す）。取得したら、その場で `$RK data add <file> --source <出典 ID> --url <URL> --desc <内容> --rq <NNN>` で目録に載せる。目録に載っていないファイルは `$CHECK` が `UNLISTED_DATA` で止める。
 
 ## コマンドの呼び出し方
