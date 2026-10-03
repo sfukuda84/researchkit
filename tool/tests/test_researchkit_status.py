@@ -45,7 +45,8 @@ class ResearchkitStatusTest(unittest.TestCase):
         self.repo = self.tmp / "proj"
         self.repo.mkdir()
         self.env = {**os.environ, **GIT_ENV}
-        for key in ("CLAUDE_CODE_REMOTE", "RESEARCHKIT_MAIN_BRANCH", "CLAUDE_PROJECT_DIR"):
+        for key in ("CLAUDE_CODE_REMOTE", "RESEARCHKIT_MAIN_BRANCH", "CLAUDE_PROJECT_DIR",
+                    "CLAUDE_CODE_SESSION_ID", "CLAUDE_SESSION_ID"):
             self.env.pop(key, None)
         self.git("init", "-q", "-b", "main")
         (self.repo / ".gitignore").write_text(".worktrees/\n", encoding="utf-8")
@@ -274,6 +275,52 @@ class ResearchkitStatusTest(unittest.TestCase):
         # 新しいセッションは 0 件から数える
         self.hook({"session_id": "s2", "hook_event_name": "SessionStart"})
         self.assertIn("REMAINING: 190", self.out("budget", "--need", "188"))
+
+    def test_budget_other_session_is_unmetered(self) -> None:
+        self.init_project()
+        self.hook({"session_id": "s1", "hook_event_name": "SessionStart"})
+        self.hook({"session_id": "s1", "hook_event_name": "PostToolUse", "tool_name": "WebSearch"})
+        # 今のセッション（s9）の記録がない: 前のセッション（s1）の回数を使わない
+        self.env["CLAUDE_CODE_SESSION_ID"] = "s9"
+        proc = self.rk("budget", "--step", "Q8")
+        self.assertEqual(proc.returncode, 0, proc.stdout)
+        self.assertIn("VERDICT: UNMETERED", proc.stdout)
+        self.assertIn("RECORDED_SESSION: s1", proc.stdout)
+        self.assertIn("USED: -", proc.stdout)
+        # 今のセッションの記録があれば、current が別のセッションを指していても今のものを読む
+        self.env["CLAUDE_CODE_SESSION_ID"] = "s1"
+        self.hook({"session_id": "s2", "hook_event_name": "SessionStart"})
+        proc = self.rk("budget", "--step", "Q8")
+        self.assertIn("SESSION: s1", proc.stdout)
+        self.assertIn("USED: WebSearch 1", proc.stdout)
+        self.assertIn("VERDICT: OK", proc.stdout)
+
+    def test_data_add(self) -> None:
+        self.init_project()
+        tpl = SKILLS / "researchkit-foundation" / "templates" / "manifest.md"
+        (self.repo / "data").mkdir(exist_ok=True)
+        shutil.copy(tpl, self.repo / "data" / "manifest.md")
+        raw = self.repo / "data" / "raw"
+        raw.mkdir(parents=True, exist_ok=True)
+        (raw / "t.csv").write_bytes(b"a,b\n1,2\n")
+        proc = self.rk("data", "add", "data/raw/t.csv", "--source", "S003-0001", "--url", "https://example.com/t.csv",
+                       "--desc", "試しの表", "--rq", "3")
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("ADDED: data/raw/t.csv", proc.stdout)
+        text = (self.repo / "data" / "manifest.md").read_text(encoding="utf-8")
+        import hashlib
+        digest = hashlib.sha256(b"a,b\n1,2\n").hexdigest()
+        row = next(line for line in text.splitlines() if line.startswith("| data/raw/t.csv |"))
+        self.assertIn(digest, row)
+        self.assertIn("| 003 |", row)
+        self.assertIn("| S003-0001 |", row)
+        # 行は「ファイル」の表の中に入る（表の後の節より前）
+        self.assertLess(text.index(row), text.index("## 取り扱いの注意"))
+        dup = self.rk("data", "add", "data/raw/t.csv", "--source", "S003-0001", "--url", "u", "--desc", "d", "--rq", "3")
+        self.assertEqual(dup.returncode, 1)
+        self.assertIn("すでに目録にある", dup.stderr)
+        self.assertEqual(self.rk("data", "add", "data/raw/none.csv", "--source", "S", "--url", "u", "--desc", "d",
+                                 "--rq", "3").returncode, 1)
 
     def test_budget_inside_worktree_reads_main_usage(self) -> None:
         self.init_project()

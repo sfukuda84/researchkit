@@ -51,7 +51,7 @@ class WorktreeHelperScenario(unittest.TestCase):
         self.repo.mkdir()
         self.env = {**os.environ, **GIT_ENV}
         # クラウドセッションの中でテストを実行しても、ローカルの動作を確かめられるようにする。
-        for key in ("CLAUDE_CODE_REMOTE", "RESEARCHKIT_MAIN_BRANCH"):
+        for key in ("CLAUDE_CODE_REMOTE", "RESEARCHKIT_MAIN_BRANCH", "CLAUDE_CODE_SESSION_ID"):
             self.env.pop(key, None)
         self.git("init", "-q", "-b", "main")
         q = self.repo / "docs" / "questions"
@@ -198,6 +198,23 @@ class WorktreeHelperScenario(unittest.TestCase):
         self.assertIn("RQ_STATUS: 完了", self.out("sync-status", "1"))
         self.assertEqual(self.status_of("001-market-size"), "完了")
         self.assertEqual(self.out("human-tasks"), "")
+
+    def test_ensure_reports_unrecorded_data_on_reuse(self) -> None:
+        out = self.out("ensure", "1", "--phase", "all")
+        self.assertIn("WORKTREE_STATE: created", out)
+        self.assertNotIn("UNCOMMITTED_CHANGES", out)
+        wt = self.repo / ".worktrees" / "001-market-size"
+        (wt / "data" / "raw").mkdir(parents=True)
+        (wt / "data" / "manifest.md").write_text(
+            "| ファイル | SHA-256 |\n|---|---|\n| data/raw/listed.csv | x |\n", encoding="utf-8")
+        (wt / "data" / "raw" / "listed.csv").write_text("a", encoding="utf-8")
+        (wt / "data" / "raw" / "食料需給表_2024.csv").write_text("b", encoding="utf-8")
+        out = self.out("ensure", "1", "--phase", "all")
+        self.assertIn("WORKTREE_STATE: reused", out)
+        self.assertIn("UNCOMMITTED_CHANGES: 3", out)
+        self.assertIn("UNRECORDED_DATA: 1", out)
+        self.assertIn("  - data/raw/食料需給表_2024.csv", out)
+        self.assertNotIn("  - data/raw/listed.csv", out)
 
     def test_report_waits_for_other_rqs(self) -> None:
         self.assertIn("DEPENDENCY_PENDING", self.out("ensure", "999", "--phase", "all"))

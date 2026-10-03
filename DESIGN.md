@@ -111,11 +111,11 @@ gamekit-review と同じく、軸ごとに文脈を持たないサブエージ�
 
 | スクリプト | 場所 | 内容 | 移植元 |
 |---|---|---|---|
-| `researchkit.py`、`rklib.py` | `researchkit-status/scripts/` | `init`、`config get`、`bootstrap`、`status`、`handover`、`doctor`、`pitfall`、`budget`、`hooks install`、`sources next`、`sources list` | gamekit.py、novelkit.py |
+| `researchkit.py`、`rklib.py` | `researchkit-status/scripts/` | `init`、`config get`、`bootstrap`、`status`、`handover`、`doctor`、`pitfall`、`budget`、`hooks install`、`sources next`、`sources list`、`estat list`・`estat get`（`estat.py`）、`data add` | gamekit.py、novelkit.py |
 | `count_search.py` | 同上 | Web 検索の回数を数えるフック | novelkit |
 | `worktree_helper.py` | `researchkit-worktree/scripts/` | worktree、ステップ判定、`status`、`next`、`human-tasks`、`sync-status`、`abort` | gamekit |
 | `validate.py` | `researchkit-questions/scripts/` | RQ 一式の検証（番号、決定とのつながり、spec_order、仮説との対応） | gamekit-features |
-| `check.py` | `researchkit-check/scripts/` | 主張ごとの出典 ID の有無、出典の必須項目（URL か書誌、参照日、等級）、使われていない出典、DOI の書式、`--online` で URL と DOI の到達性 | novelkit-check |
+| `check.py` | `researchkit-check/scripts/` | 主張ごとの出典 ID の有無、出典の必須項目（URL か書誌、参照日、等級）、使われていない出典、DOI の書式、`--online` で URL と DOI の到達性、データの目録と `data/raw/` の照合（目録にない・ない・SHA-256 の違い） | novelkit-check |
 | `numbers.py` | `researchkit-check/scripts/` | `findings.md`・報告書の数値と、分析の出力（JSON）の突き合わせ | gamekit balance.py |
 | `build_pptx.py` | `researchkit-publish/scripts/` | スライドの生成（python-pptx、`uv run`） | speckit-presentation |
 | `strip_refs.py` | `researchkit-publish/scripts/` | 公開用の文書から `{N:...}`（と主張の参照）を取り除く | — |

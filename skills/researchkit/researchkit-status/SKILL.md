@@ -34,6 +34,9 @@ python3 <skills>/researchkit-status/scripts/researchkit.py [--root <dir>] <comma
 | `$RK hooks install` | `.claude/settings.json` に、Web 検索の回数を数えるフック（`count_search.py`）を登録する。既存の設定は残す。`.gitignore` に `.researchkit/usage/` を足す。`new-researchkit-project` が自動で行う |
 | `$RK sources next <NNN> [--count <k>]` | RQ `<NNN>` の次の空き出典 ID を `k` 個出す（§6） |
 | `$RK sources list [--grade A,B] [--rq <NNN>] [--unused]` | 出典の一覧（ID、等級、種類、題名、使った RQ）を表で出す（§6） |
+| `$RK estat list <政府統計コード\|一覧の URL> [--grep <語>] [--limit <n>]` | e-Stat のファイルの一覧を短く出す（§8）。分類のページなら下の階層の名前・件数・公開日・URL、表のページなら statInfId・形式・表番号・題名・調査年月・公開日 |
+| `$RK estat get <statInfId> --kind <0\|1\|2\|4> --out <保存先>` | e-Stat の表を取得する（§8）。中身の形式（xls、xlsx、csv、pdf、zip）に合う拡張子で保存し、SHA-256 と大きさを出す。中身が HTML（エラーのページ）なら保存せずに終了コード 1 |
+| `$RK data add <file> --source <ID> --url <URL> --desc <内容> --rq <NNN> [--license <規約>] [--method <方法>] [--accessed <日付>]` | データの目録（`data/manifest.md` の「ファイル」の表）に 1 行足す（§8）。SHA-256・大きさ・置き場所（raw / large）はファイルから求める。同じファイルの行があれば止まる |
 
 終了コードは、0 が成功、1 がエラー、3 が前提条件を満たさないこと、4 が `budget` の STOP（セッションを区切る）を表す。
 
@@ -129,6 +132,7 @@ VERDICT: OK
 - `NEED` は `--step <STEP>` なら `session.estimates` の値、`--need <N>` なら `N` である。`STEP` は `R2`、`R6`、`Q8`、`Q11`、`rq`（1 件の RQ の Q2〜Q13 の合計）のいずれか（`session.estimates` のキー）。ないキーを渡すとエラーになる。
 - `REMAINING` は `web_search_limit − reserve − USED` である。`NEED` が `REMAINING` を超えれば `VERDICT: STOP`（終了コード 4）になる。
 - フックの記録がないときは、`USED` と `REMAINING` が `-` になり、`VERDICT: UNMETERED`（終了コード 0）になる。Claude Code 以外のエージェント、フックを登録する前、登録した後に Claude Code を起動し直していないときである。
+- Claude Code では、今のセッションの ID（環境変数 `CLAUDE_CODE_SESSION_ID`）と記録のセッションを照らす。記録が別のセッションのもの（プロジェクトの外で Claude Code を起動した、フックが読まれていない）なら、前のセッションの回数を使わずに `VERDICT: UNMETERED` にし、`RECORDED_SESSION` に記録のセッションと更新日時を出す。この場合は、プロジェクトのルートで Claude Code を起動し直すまで、使った回数を手で数えて引き継ぎ書に書く。
 
 ### 実行する場所
 
@@ -179,6 +183,17 @@ VERDICT: OK
 - `--grade A,B` は等級で絞る。`--rq 003` は、ID が `S003-` で始まるものと、`used_in` に `003` の RQ があるものに絞る。`--unused` は、`studies/` と `reports/` の Markdown のどこからも ID が参照されていないものに絞る。組み合わせてよい。
 - 出典の必須項目の検証と、使われていない出典の警告は `researchkit-check`（`$CHECK`）が行う。`sources list` は一覧を見るためのものである。
 
+## 8. 公的統計の取得とデータの目録
+
+e-Stat（政府統計の総合窓口）の表は、一覧の HTML を自分で読まずに、次の順で取る。一覧の HTML の読み解きは呼び出しの回数を大きく増やす（003 の Q8 では親の呼び出しの多くがこれに使われた）。
+
+1. `$RK estat list <政府統計コード>`（例: `00500300` 食料需給表）で統計の分類を見る。出力の URL を次の `estat list` に渡し、表の一覧（`TABLES:`）まで下りる。`--grep 国内生産量` のように語で絞る。
+2. `$RK estat get <statInfId> --kind <0|1|2> --out data/raw/<名前>.<拡張子>` で取得する。`fileKind` は 0 が Excel、1 が CSV、2 が PDF（一覧の形式の欄）。拡張子が中身と違えば、中身に合う拡張子で保存する（`WARNING` と `PATH` を見る）。
+3. その場で `$RK data add <PATH> --source <出典 ID> --url <URL> --desc <表の名前・範囲・単位> --rq <NNN>` を実行し、目録に載せる。ライセンスの既定は e-Stat の利用規約で、ほかの提供元は `--license` で書く。取得の方法の既定は curl のコマンド（`--method` で変える）。
+4. 出典台帳（`sources/`）への登録と、抜き書き（`evidence/`）は `researchkit-collect` の手順で行う。
+
+目録に載っていない data/raw/ のファイル、目録にあるのにないファイル、SHA-256 の違うファイルは、`$CHECK --rq <NNN>`（と `--all`）が `UNLISTED_DATA`・`MISSING_DATA`・`HASH_MISMATCH` の ERROR で止める。
+
 ## 7. 手動での利用
 
 ユーザーからこのスキルを直接呼ばれたときは、引数に応じて次を行う。
@@ -195,5 +210,6 @@ VERDICT: OK
 - `budget [--step <STEP>]`: 結果を示す。STOP なら区切りであることと再開の方法を、UNMETERED なら 1 セッションで進める RQ の数を伝える。
 - `sources next <NNN> [--count <k>]` / `sources list [...]`: 結果を示す。
 - `init [...]`: `$RK init` を実行し、作ったものを示す。
+- `estat list|get ...` / `data add ...`: 結果の要点を示す（§8）。
 
 応答と成果物は、プロジェクトの言語ルール（`.kiro/steering/language.md`）に従う。

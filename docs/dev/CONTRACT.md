@@ -23,10 +23,13 @@ scaffold の開発用の文書である（新規プロジェクトには持ち�
 | `handover [--note <text>]` | 引き継ぎ書を更新する（gamekit と同じ。`CURRENT_STATE.md` の自動の節、`sessions/`）。コミットしない |
 | `doctor` | 設定、リンク、steering、`commands.analysis` の有無、フックの有無を診断。`OK`/`WARN`/`ERROR` と `SUMMARY`。ERROR で終了コード 1 |
 | `pitfall <text>` | `PITFALLS.md` の先頭に日付つきで足す |
-| `budget [--step <STEP> \| --need <N>]` | novelkit と同じ。`USED`、`LIMIT`、`NEED`、`REMAINING`、`VERDICT: OK\|STOP\|UNMETERED`。STOP は終了コード 4。`STEP` は `session.estimates` のキー（`R2`、`R6`、`Q8`、`Q11`、`rq`） |
+| `budget [--step <STEP> \| --need <N>]` | novelkit と同じ。`USED`、`LIMIT`、`NEED`、`REMAINING`、`VERDICT: OK\|STOP\|UNMETERED`。STOP は終了コード 4。`STEP` は `session.estimates` のキー（`R2`、`R6`、`Q8`、`Q11`、`rq`）。環境変数 `CLAUDE_CODE_SESSION_ID` があれば、そのセッションの記録を読む。記録が別のセッションのものなら `VERDICT: UNMETERED` と `RECORDED_SESSION: <ID>（更新 <日時>）` |
 | `hooks install` | `.claude/settings.json` に、Web 検索の回数を数えるフック（`count_search.py`）を登録する。既存の設定は保つ |
 | `sources next <NNN> [--count <k>]` | RQ `<NNN>` の次の空き出典 ID を `k` 個出す（既定 1）。`sources/` の作業ツリーと `main` の両方を見て、使われている最大の連番の次から出す |
 | `sources list [--grade A,B] [--rq <NNN>] [--unused]` | 出典の一覧（ID、等級、種類、題名、使った RQ） |
+| `estat list <政府統計コード\|一覧の URL> [--grep <語>] [--limit <n>]` | e-Stat の一覧を読む（`estat.py`）。`URL`、`HTTP` と、分類のページなら `CLASSES: <件数>` と「名前（周期）\t件数\t公開日\tURL」の行、表のページなら `TABLES: <件数>` と「statInfId\t形式\t表番号 題名［グループ］\t調査年月\t公開日」の行 |
+| `estat get <statInfId> --kind <0\|1\|2\|3\|4> --out <path>` | 表を取得する。`URL`、`HTTP`、`BYTES`、`FORMAT`（xls/xlsx/csv/pdf/zip/html）、`SHA256`、`PATH`。拡張子が中身と違えば中身の拡張子で保存し `WARNING`。HTML（エラーのページ）なら保存せず `ERROR` で終了コード 1 |
+| `data add <file> --source <ID> --url <URL> --desc <内容> --rq <NNN> [--license] [--method] [--accessed]` | `data/manifest.md` の「ファイル」の表（SHA-256 の列を持つ表）の末尾に 1 行足す。SHA-256・大きさ・置き場所はファイルから求める。同じファイルの行があれば終了コード 1 |
 
 終了コード: 0 成功、1 エラー、3 前提条件を満たさない、4 budget の STOP。
 
@@ -44,6 +47,7 @@ gamekit の `worktree_helper.py` を移植する。違いだけを書く。
 - 完了の判定: design の完了は Q7-2 のチェックポイントがあること（`main` にマージ済みなら `studies/<NNN-name>/tasks.md` があること）。execute の完了は Q12 のチェックポイント、または `main` の `studies/<NNN-name>/findings.md` があり、`tasks.md` の `[人]` 以外がすべて `- [x]` であること。
 - 状態欄: `docs/questions/<NNN-name>.md` の `**状態**: <値> |`。値は `未着手`／`設計済み`／`完了`／`人の作業待ち`。`finish` が、design の後は `設計済み`、execute・all の後は `完了` か `人の作業待ち` にする。`docs/questions/README.md` の一覧の状態列も合わせる（gamekit と同じ）。
 - `999-research-report` の前提: `ensure 999-...` は、ほかのすべての RQ（`000` を含む）の状態が `完了` か `人の作業待ち` でなければ、`PRECONDITION: DEPENDENCY_PENDING` で終了コード 3。`next` は、ほかが終わるまで 999 を候補にしない。
+- `ensure` は、`WORKTREE_STATE` が `reused` か `reattached` のとき、どのステップのコミットにも入っていない変更があれば `UNCOMMITTED_CHANGES: <件数>`、そのうち `data/manifest.md` に行のない `data/raw/` のファイルがあれば `UNRECORDED_DATA: <件数>` と `  - <path>` の行（20 件まで）を出す。終了コードは変えない。
 - 前提条件のコード: `ALREADY_DESIGNED`、`ALREADY_EXECUTED`、`EXECUTE_IN_PROGRESS`、`DESIGN_INCOMPLETE`、`DESIGN_MISSING`、`LEFTOVER_CHANGES`、`NOT_ON_MAIN`、`UNCHECKED_TASKS`、`DEPENDENCY_PENDING`。
 - コマンド: `ensure`、`state`、`checkpoint`、`finish`、`abort`、`list`、`status`、`human-tasks`、`sync-status`、`next`、`resolve`（gamekit と同じ意味）。`ensure` と `state` の出力の項目名は `RQ_NAME`（gamekit の `FEATURE_NAME`）以外は gamekit と同じ。
 - 着手順は `docs/questions/spec_order.md` の並び、その後に番号順。
@@ -122,6 +126,7 @@ gamekit の `worktree_helper.py` を移植する。違いだけを書く。
 - `check.py [--root R] [--rq <NNN>|--all] [--file <path>] [--online] [--strict]`: 出典の参照の検証。
   - ERROR: 主張の根拠の欄に、存在しない出典 ID・主張 ID がある。根拠の欄が空。根拠が `min_grade` 未満の等級の出典だけ。出典ファイルの必須項目（`id`、`type`、`title`、`accessed`、`grade`、`url` か `doi` か書誌（`author`＋`publisher`）のどれか）が欠けている。`id` とファイル名が一致しない。確度の値が `confidence.levels` にない。
   - WARN: 使われていない出典。`used_in` と実際の参照の食い違い。DOI の書式の誤り。参照日が 1 年以上前。`grade: D` の出典がある。
+  - ERROR（データの目録。`--rq` と `--all`）: `data/raw/` にあるのに `data/manifest.md` の「ファイル」の表にない（`UNLISTED_DATA`）。目録の raw の行のファイルがない（`MISSING_DATA`）。目録の SHA-256 と中身が違う（`HASH_MISMATCH`）。`data/raw/` にファイルがあるのに目録がない（`NO_MANIFEST`）。`--rq` では「使った RQ」にその番号がある行だけを照らす（目録にないファイルは常に出す）。`data/large/` の行は手元になくてよい。
   - `--online`: URL（HEAD、だめなら GET）と DOI（`https://doi.org/<doi>`）の到達性。失敗は WARN。
   - 出力: 1 行 1 件 `ERROR|WARN <file>:<line> <code> <説明>` と、最後に `SUMMARY: errors=<n> warnings=<n>`。エラーがあれば終了コード 1。
 - `numbers.py [--root R] [--rq <NNN>|--all] [--file <path>]`: `{N:<path>#<key>}` の直前の数値と JSON の値を突き合わせる。数値の書式（`1,234`、`12.3%`、`1.2万`、`3億`、`-0.5`）を解釈する。`%` の扱いは、JSON の値が 0〜1 なら 100 倍して比べる。`{N:calc}` は対象外（件数を数えて出すだけ）。出力は `check.py` と同じ形式。

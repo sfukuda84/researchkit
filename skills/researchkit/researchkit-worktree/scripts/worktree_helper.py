@@ -612,6 +612,32 @@ def repo_is_dirty() -> bool:
     return bool(git_out(["status", "--porcelain"]))
 
 
+def report_leftovers(wt: Path) -> None:
+    """再利用する worktree に残った、どのステップのコミットにも入っていない変更を報告する。
+
+    前のセッションが途中で切れると、取得したデータ（data/raw/）が目録に載らないまま残ることがある。
+    UNCOMMITTED_CHANGES に件数、UNRECORDED_DATA に目録（data/manifest.md）にないデータのファイルを出す。
+    """
+    status = run_git(["-c", "core.quotePath=false", "status", "--porcelain", "--untracked-files=all"], cwd=wt).stdout
+    paths = [line[3:].strip().strip('"').split(" -> ")[-1] for line in status.splitlines() if len(line) > 3]
+    if not paths:
+        return
+    print(f"UNCOMMITTED_CHANGES: {len(paths)}")
+    manifest = wt / DATA_DIR / "manifest.md"
+    listed = manifest.read_text(encoding="utf-8") if manifest.is_file() else ""
+    data_prefix = f"{DATA_DIR}/raw/"
+    unrecorded = [p for p in paths if p.startswith(data_prefix) and f"| {p} |" not in listed
+                  and Path(p).name not in (".gitkeep", ".DS_Store")]
+    if unrecorded:
+        print(f"UNRECORDED_DATA: {len(unrecorded)}")
+        for p in unrecorded[:20]:
+            print(f"  - {p}")
+        if len(unrecorded) > 20:
+            print(f"  - ほか {len(unrecorded) - 20} 件")
+        print("NOTE: 前のセッションが途中で止まった跡。出どころ（URL・statInfId）を確かめて取り直し、SHA-256 が一致したものを"
+              " researchkit.py data add で目録に載せる。出どころが分からないものは使わず、人に確かめてから取り除く")
+
+
 def cmd_ensure(args: list[str]) -> None:
     positional, phase, _ = parse_args(args)
     phase = require_phase(phase)
@@ -650,6 +676,8 @@ def cmd_ensure(args: list[str]) -> None:
 
     (wt / STUDIES_DIR / name).mkdir(parents=True, exist_ok=True)
     print_state(name, phase, wt_state)
+    if wt_state in ("reused", "reattached"):
+        report_leftovers(wt)
 
 
 def cmd_state(args: list[str]) -> None:

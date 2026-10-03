@@ -13,6 +13,9 @@
   python3 researchkit.py [--root <dir>] hooks install
   python3 researchkit.py [--root <dir>] sources next <NNN> [--count <k>]
   python3 researchkit.py [--root <dir>] sources list [--grade A,B] [--rq <NNN>] [--unused]
+  python3 researchkit.py [--root <dir>] estat list <政府統計コード|一覧の URL> [--grep <語>]
+  python3 researchkit.py [--root <dir>] estat get <statInfId> --kind <0|1|2|4> --out <保存先>
+  python3 researchkit.py [--root <dir>] data add <file> --source <ID> --url <URL> --desc <内容> --rq <NNN> [--license <規約>] [--method <取得の方法>]
 
 - 調査全体の工程（researchkit-bootstrap の R1〜R12）の進捗は、コミットの trailer "Researchkit-Bootstrap: R<n>" から判定する。
 - RQ の工程（Q1〜Q13）の進捗は、researchkit-worktree の worktree_helper.py に任せる。
@@ -26,7 +29,9 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -34,6 +39,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import estat  # noqa: E402
 import rklib  # noqa: E402
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
@@ -523,6 +529,12 @@ def current_usage(root: Path) -> dict | None:
         return None
     cur = max(candidates, key=lambda p: p.stat().st_mtime)
     sid = cur.read_text(encoding="utf-8").strip()
+    live = current_session_id()
+    if live and live != sid:
+        for c in candidates:
+            if (c.parent / f"{live}.json").exists():
+                cur, sid = c, live
+                break
     path = cur.parent / f"{sid}.json"
     if not path.exists():
         return {"session_id": sid, "WebSearch": 0, "WebFetch": 0}
@@ -530,6 +542,11 @@ def current_usage(root: Path) -> dict | None:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
+
+
+def current_session_id() -> str:
+    """今のセッションの ID（Claude Code が Bash に渡す環境変数）。分からなければ空。"""
+    return (os.environ.get("CLAUDE_CODE_SESSION_ID") or os.environ.get("CLAUDE_SESSION_ID") or "").strip()
 
 
 def cmd_budget(root: Path, args: argparse.Namespace) -> int:
@@ -569,6 +586,18 @@ def cmd_budget(root: Path, args: argparse.Namespace) -> int:
         else:
             out("NOTE: 検索の回数を数えるフックがない（Claude Code 以外、または researchkit.py hooks install の前）。"
                 f"回数を数えられない環境の規則に従う（1 セッション {unmetered} 件の RQ まで）")
+        return 0
+    live = current_session_id()
+    if live and u.get("session_id") != live:
+        # 記録はあるが、今のセッションのものではない（プロジェクトの外でセッションを始めた、フックが読まれていない）
+        out(f"SESSION: {live}（記録なし）")
+        out(f"RECORDED_SESSION: {u.get('session_id')}（更新 {u.get('updated', '-')}）")
+        out("USED: -")
+        out("REMAINING: -")
+        out("VERDICT: UNMETERED")
+        out("NOTE: 記録は別のセッションのもので、このセッションの回数は数えられていない。プロジェクトのルートで Claude Code を"
+            f"起動し直すと数えられる。それまでは、回数を数えられない環境の規則に従う（1 セッション {unmetered} 件の RQ まで）。"
+            "使った回数を手で数え、引き継ぎ書に書く")
         return 0
     used = int(u.get("WebSearch", 0))
     remaining = limit - reserve - used
@@ -716,6 +745,102 @@ def cmd_sources(root: Path, args: argparse.Namespace) -> int:
     return cmd_sources_list(root, args)
 
 
+# ---------------------------------------------------------------- e-Stat / データの目録
+
+def cmd_estat(root: Path, args: argparse.Namespace) -> int:
+    """e-Stat の一覧を短く表示する（list）、表を取得する（get）。結果はファイルに書き、標準出力は要点だけにする。"""
+    if args.action == "list":
+        if not args.target:
+            raise RkError("estat list には政府統計コードか一覧の URL を指定する")
+        url = estat.list_url(args.target)
+        status, body, _ = estat.fetch(url)
+        page = body.decode("utf-8", "replace")
+        rows = estat.parse_files(page)
+        out(f"URL: {url}")
+        out(f"HTTP: {status}")
+        if rows:
+            hit = [r for r in rows if not args.grep or args.grep in r["title"] or args.grep in r["group"]]
+            out(f"TABLES: {len(rows)}（表示 {len(hit)}）")
+            for r in hit[: args.limit]:
+                kinds = "/".join(estat.KIND_NAMES.get(k, k) for k in r["kinds"].split(",") if k)
+                no = f"表{r['no']} " if r["no"] else ""
+                grp = f"［{r['group']}］" if r["group"] and r["group"] != r["title"] else ""
+                out(f"{r['statInfId']}\t{kinds}\t{no}{r['title']}{grp}\t{r['period']}\t{r['date']}")
+            if len(hit) > args.limit:
+                out(f"NOTE: ほかに {len(hit) - args.limit} 件（--grep で絞るか --limit を増やす）")
+            return 0
+        cls = estat.parse_classes(page)
+        hit = [c for c in cls if not args.grep or args.grep in c["name"]]
+        out(f"CLASSES: {len(cls)}（表示 {len(hit)}）")
+        for c in hit[: args.limit]:
+            cyc = f"（{c['cycle']}）" if c["cycle"] else ""
+            out(f"{c['name']}{cyc}\t{c['count']}件\t{c['date']}\t{c['url']}")
+        if not cls:
+            out("NOTE: 表も分類も見つからない。URL を確かめる（layout=datalist を付けると表の一覧になることがある）")
+        return 0
+    if not (args.target and args.kind is not None and args.out):
+        raise RkError("estat get には statInfId、--kind、--out を指定する")
+    dest = Path(args.out)
+    dest = dest if dest.is_absolute() else root / dest
+    info = estat.save(args.target, str(args.kind), dest)
+    for key in ("url", "http", "bytes", "format", "sha256", "path", "warning", "error"):
+        if info.get(key):
+            out(f"{key.upper()}: {info[key] if key != 'path' else rel(root, Path(info[key]))}")
+    if info.get("error"):
+        return 1
+    out(f"NEXT: researchkit.py data add {rel(root, Path(info['path']))} --source <出典 ID> --url \"{info['url']}\" --desc <内容> --rq <NNN>")
+    return 0
+
+
+MANIFEST_HEADER = "| ファイル | 置き場所 | 出典 ID | 出所（URL・提供元） | 取得日 | 取得の方法 | ライセンス・利用規約 | SHA-256 | 大きさ | 内容 | 使った RQ |"
+
+
+def manifest_path(root: Path, cfg: dict) -> Path:
+    return rklib.pth(root, cfg, "data") / "manifest.md"
+
+
+def cmd_data(root: Path, args: argparse.Namespace) -> int:
+    """data/manifest.md の「ファイル」の表に 1 行足す（SHA-256 と大きさはファイルから求める）。"""
+    cfg = rklib.load_config(root)
+    path = Path(args.file)
+    path = path if path.is_absolute() else root / path
+    if not path.is_file():
+        raise RkError(f"ファイルがない: {args.file}")
+    name = rel(root, path)
+    manifest = manifest_path(root, cfg)
+    if not manifest.exists():
+        raise RkError(f"{rel(root, manifest)} がない（researchkit-foundation の templates/manifest.md から作る）")
+    text = manifest.read_text(encoding="utf-8")
+    rows = rklib.read_table(manifest, require="SHA-256")
+    if any(r.get("ファイル", "").strip("` ") == name for r in rows):
+        raise RkError(f"{name} はすでに目録にある（行を直すときは手で直す）")
+    data = path.read_bytes()
+    digest = hashlib.sha256(data).hexdigest()
+    place = "large" if "/large/" in f"/{name}" else "raw"
+    max_mb = float(rklib.config_get(cfg, "data.max_file_mb") or 5)
+    if place == "raw" and len(data) > max_mb * 1024 * 1024:
+        out(f"WARN: {max_mb:g} MB を超える。data/large/ に置き、コミットしない（data.max_file_mb）")
+    method = args.method or f'`curl -sSL -A "<ブラウザの User-Agent>" -o {name} "{args.url}"`'
+    cells = [name, place, args.source, args.url, args.accessed or dt.date.today().isoformat(), method,
+             args.license or "e-Stat 利用規約（政府標準利用規約 第 2.0 版準拠）。出典の記載が要る",
+             digest, f"{len(data):,} bytes", args.desc, rklib.normalize_rq_number(args.rq)]
+    row = "| " + " | ".join(c.replace("|", "／") for c in cells) + " |"
+    lines = text.splitlines()
+    header = next((i for i, l in enumerate(lines) if l.strip().startswith("|") and "SHA-256" in l), None)
+    if header is None:
+        raise RkError(f"{rel(root, manifest)} に「ファイル」の表（SHA-256 の列）がない。見出し: {MANIFEST_HEADER}")
+    end = header + 1
+    while end < len(lines) and lines[end].strip().startswith("|"):
+        end += 1
+    lines.insert(end, row)
+    manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    out(f"ADDED: {name}")
+    out(f"SHA256: {digest}")
+    out(f"BYTES: {len(data)}")
+    out(f"MANIFEST: {rel(root, manifest)}（{end + 1} 行目）")
+    return 0
+
+
 # ---------------------------------------------------------------- main
 
 def main(argv: list[str] | None = None) -> int:
@@ -753,16 +878,33 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--grade", default="")
     p.add_argument("--rq", dest="rq_filter", default="")
     p.add_argument("--unused", action="store_true")
+    p = sub.add_parser("estat", help="e-Stat の一覧を短く表示する（list）、表を取得する（get）")
+    p.add_argument("action", choices=["list", "get"])
+    p.add_argument("target", nargs="?", help="list: 政府統計コード（8 桁）か一覧の URL / get: statInfId")
+    p.add_argument("--grep", default="", help="list: 名前・題名に含む語で絞る")
+    p.add_argument("--limit", type=int, default=40, help="list: 表示する行の上限（既定 40）")
+    p.add_argument("--kind", choices=["0", "1", "2", "3", "4"], help="get: fileKind（0 Excel、1 CSV、2 PDF）")
+    p.add_argument("--out", help="get: 保存先（プロジェクトのルートからの相対パス。例: data/raw/xxx.csv）")
+    p = sub.add_parser("data", help="データの目録（data/manifest.md）に 1 行足す")
+    p.add_argument("action", choices=["add"])
+    p.add_argument("file")
+    p.add_argument("--source", required=True, help="出典 ID（例: S003-0003）")
+    p.add_argument("--url", required=True, help="取得した URL")
+    p.add_argument("--desc", required=True, help="内容（表の名前、範囲、単位）")
+    p.add_argument("--rq", required=True, help="使った RQ の番号")
+    p.add_argument("--license", default="", help="ライセンス・利用規約（既定: e-Stat の利用規約）")
+    p.add_argument("--method", default="", help="取得の方法（既定: curl のコマンド）")
+    p.add_argument("--accessed", default="", help="取得日（既定: 今日）")
     args = ap.parse_args(argv)
     if args.cmd == "sources" and args.action == "list":
         args.rq = args.rq_filter or args.rq
     root = Path(args.root).expanduser().resolve() if args.root else rklib.find_root()
     handlers = {"init": cmd_init, "config": cmd_config, "bootstrap": cmd_bootstrap, "status": cmd_status,
                 "handover": cmd_handover, "doctor": cmd_doctor, "pitfall": cmd_pitfall, "budget": cmd_budget,
-                "hooks": cmd_hooks, "sources": cmd_sources}
+                "hooks": cmd_hooks, "sources": cmd_sources, "estat": cmd_estat, "data": cmd_data}
     try:
         return handlers[args.cmd](root, args)
-    except (RkError, rklib.YamlError, RuntimeError) as e:
+    except (RkError, rklib.YamlError, RuntimeError, ValueError, OSError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 1
 
