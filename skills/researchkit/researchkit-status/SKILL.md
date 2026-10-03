@@ -30,7 +30,7 @@ python3 <skills>/researchkit-status/scripts/researchkit.py [--root <dir>] <comma
 | `$RK handover [--note <text>]` | 引き継ぎ書を更新する（§3）。コミットはしない |
 | `$RK doctor` | 設定と環境を診断し、`OK` / `WARN` / `ERROR` の行と `SUMMARY` を出す（§4）。ERROR があれば終了コード 1 |
 | `$RK pitfall <text>` | `PITFALLS.md` の先頭に、日付つきの見出しで 1 件足す（§3） |
-| `$RK budget [--step <STEP> \| --need <N>]` | 次の工程に、このセッションの Web 検索の残りが足りるかを判定する（§5）。STOP は終了コード 4 |
+| `$RK budget [--step <STEP> \| --need <N>] [--rq <RQ>]` | 次の工程に、このセッションの Web 検索の残りが足りるかを判定する（§5）。`--rq` で RQ の `plan.md` の見積もりと手法の既定を使う。STOP は終了コード 4 |
 | `$RK hooks install` | `.claude/settings.json` に、Web 検索の回数を数えるフック（`count_search.py`）を登録する。既存の設定は残す。`.gitignore` に `.researchkit/usage/` を足す。`new-researchkit-project` が自動で行う |
 | `$RK sources next <NNN> [--count <k>]` | RQ `<NNN>` の次の空き出典 ID を `k` 個出す（§6） |
 | `$RK sources list [--grade A,B] [--rq <NNN>] [--unused]` | 出典の一覧（ID、等級、種類、題名、使った RQ）を表で出す（§6） |
@@ -120,8 +120,10 @@ Web 検索には、1 セッションあたりの回数に上限がある（Claud
 ### `budget` の出力
 
 ```text
-STEP: Q8
-NEED: 60
+STEP: Q11
+RQ: 003-production-volume（plan.md: studies/003-production-volume/plan.md、手法: data, desk）
+NEED: 40（Q11 25 + Q12 15）
+SOURCE: plan.md / estimates_by_method（data, desk）
 LIMIT: 200（reserve 10）
 SESSION: 3f2a...
 USED: WebSearch 92 / WebFetch 40
@@ -129,7 +131,9 @@ REMAINING: 98
 VERDICT: OK
 ```
 
-- `NEED` は `--step <STEP>` なら `session.estimates` の値、`--need <N>` なら `N` である。`STEP` は `R2`、`R6`、`Q8`、`Q11`、`rq`（1 件の RQ の Q2〜Q13 の合計）のいずれか（`session.estimates` のキー）。ないキーを渡すとエラーになる。
+- `NEED` の決め方（`SOURCE` に出る）: `--need <N>` があればそれ。なければ、`--rq <RQ>` のときは RQ の `plan.md` の「検索数の見積もり」の表の値（WebSearch の値、幅なら上限）、表にそのステップがなければ `session.estimates_by_method` の値（RQ の概要の `**手法**` のうち最大）、最後に `session.estimates` の値を使う。RQ の工程（Q8、Q11、`rq`）では `--rq` を付ける。`plan.md` は、プロジェクトのルート、メインの作業ツリー、その RQ の worktree の順に探す。
+- `--step Q11` は、5 軸レビューの 2 回分（Q11 と Q12）の合計を見る（Q12 も Counter 軸で検索する）。`NEED` の後ろに内訳が出る。
+- `STEP` は `R2`、`R6`、`Q8`、`Q11`、`Q12`、`rq`（1 件の RQ の Q2〜Q13 の合計）のいずれか（`session.estimates` のキー）。ないキーを渡すとエラーになる。`R2`・`R6` は `--rq` を付けても `session.estimates` を使う。
 - `REMAINING` は `web_search_limit − reserve − USED` である。`NEED` が `REMAINING` を超えれば `VERDICT: STOP`（終了コード 4）になる。
 - フックの記録がないときは、`USED` と `REMAINING` が `-` になり、`VERDICT: UNMETERED`（終了コード 0）になる。Claude Code 以外のエージェント、フックを登録する前、登録した後に Claude Code を起動し直していないときである。
 - Claude Code では、今のセッションの ID（環境変数 `CLAUDE_CODE_SESSION_ID`）と記録のセッションを照らす。記録が別のセッションのもの（プロジェクトの外で Claude Code を起動した、フックが読まれていない）なら、前のセッションの回数を使わずに `VERDICT: UNMETERED` にし、`RECORDED_SESSION` に記録のセッションと更新日時を出す。この場合は、プロジェクトのルートで Claude Code を起動し直すまで、使った回数を手で数えて引き継ぎ書に書く。
@@ -140,9 +144,9 @@ VERDICT: OK
 |---|---|---|
 | R2（広域の調査）の前 | `$RK budget --step R2` | researchkit-bootstrap |
 | R6（予備調査）の前 | `$RK budget --step R6` | researchkit-bootstrap |
-| RQ に入る前（Q1 の前） | `$RK budget --step rq` | researchkit-question、researchkit-execute、researchkit-all |
-| Q8（収集）の前 | `$RK budget --step Q8` | researchkit-execute、researchkit-all |
-| Q11（5 軸レビュー 1 回目）の前 | `$RK budget --step Q11` | researchkit-execute、researchkit-all |
+| RQ に入る前（Q1 の前） | `$RK budget --step rq --rq <RQ>` | researchkit-question、researchkit-execute、researchkit-all |
+| Q8（収集）の前 | `$RK budget --step Q8 --rq <RQ_NAME>` | researchkit-execute、researchkit-all |
+| Q11（5 軸レビュー 1 回目）の前 | `$RK budget --step Q11 --rq <RQ_NAME>` | researchkit-execute、researchkit-all |
 | そのほか、検索の多い作業を単独で始める前 | `$RK budget --need <見積もり>` | 必要に応じて |
 
 ### 結果ごとの動き

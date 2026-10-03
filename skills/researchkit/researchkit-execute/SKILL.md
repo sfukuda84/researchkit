@@ -29,7 +29,7 @@ $ARGUMENTS
 
 対象の RQ ごとに、次を順に行う。
 
-1. **予算の確認**: `$RK budget --step rq` を実行する。`VERDICT: STOP`（終了コード 4）なら、この RQ に入らずに止まり、新しいセッションで同じ引数で実行するよう案内する（steering の「セッションの区切り」）。途中の RQ を再開するときは、残りのステップの分だけを見積もってよい（Q8 が残っていれば `--step Q8`、Q11 から先だけなら `--step Q11`）。
+1. **予算の確認**: `$RK budget --step rq --rq <RQ>` を実行する。`VERDICT: STOP`（終了コード 4）なら、この RQ に入らずに止まり、新しいセッションで同じ引数で実行するよう案内する（steering の「セッションの区切り」）。途中の RQ を再開するときは、残りのステップの分だけを見積もってよい（Q8 が残っていれば `--step Q8 --rq <RQ_NAME>`、Q11 から先だけなら `--step Q11 --rq <RQ_NAME>`）。
 2. **Q1 準備**: `researchkit-worktree` の『Q1 準備』の節に従い、`$HELPER ensure <RQ> --phase execute` を実行する。
    - 設計の工程の途中の worktree がある場合は `DESIGN_INCOMPLETE`、設計がどこにもない場合は `DESIGN_MISSING` で止まる。そのときは何も作らずに、`researchkit-question` か `researchkit-all` を案内する。
    - すでに実行を終えている場合は `ALREADY_EXECUTED` で止まる。完了として扱う。
@@ -60,7 +60,7 @@ $ARGUMENTS
 
 ### Q8: 収集
 
-1. **始める前に** `$RK budget --step Q8` を実行する。STOP なら Q8 に入らずに止まる（Q7-2 までのチェックポイントは記録済み）。
+1. **始める前に** `$RK budget --step Q8 --rq <RQ_NAME>` を実行する。STOP なら Q8 に入らずに止まる（Q7-2 までのチェックポイントは記録済み）。
 2. `researchkit-collect` の手順で、`tasks.md` の収集のフェーズのタスクを実行する。要点は次のとおりである。
    - 出典 ID は `$RK sources next <NNN> --count <k>` で取る。既存の出典は新しく作らず、`used_in` に足す。サブエージェントで並行に集めるときは、ID の範囲を分ける（steering の「サブエージェントに任せるとき」）。
    - AI が挙げた文献・統計は 1 件ずつ実在を確かめる。確かめられないものは等級 `D` にし、根拠に使わない。
@@ -90,7 +90,7 @@ $ARGUMENTS
 
 ### Q11: 5 軸レビュー 1 回目と修正
 
-1. **始める前に** `$RK budget --step Q11` を実行する。STOP なら Q11 に入らずに止まる（Q10 までのチェックポイントは記録済み）。
+1. **始める前に** `$RK budget --step Q11 --rq <RQ_NAME>` を実行する。STOP なら Q11 に入らずに止まる（Q10 までのチェックポイントは記録済み）。
 2. `researchkit-review --round 1` の手順で、`findings.md` と根拠（`evidence/`、`analysis/`、`sources/`）を、Source・Logic・Counter・Bias・Numbers の 5 軸でレビューする。定性調査かデータ分析を含む RQ では Ethics を足す。記録は `RQ_DIR/reviews/review-1.md` に書く。可能なら、軸ごとに文脈を持たないサブエージェントで独立に審査し、親が指摘の裏を取ってから採否を決める。
 3. CRITICAL・HIGH・MEDIUM の指摘を直す。主張を直したら、`$CHECK --rq <NNN>` と `$NUM --rq <NNN>` が通ることを確かめ、逆流が要るものは Q10 と同じく上流の文書も直す。
 4. `checkpoint <RQ_NAME> Q11` を記録する。

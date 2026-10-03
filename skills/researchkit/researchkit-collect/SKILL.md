@@ -54,7 +54,7 @@ $ARGUMENTS
 
 ### 始める前に（検索の予算）
 
-`$RK budget --step Q8` を実行する（呼び出し元の `researchkit-execute`・`researchkit-all` が直前に確かめていれば省いてよい）。`VERDICT: STOP`（終了コード 4）なら、始めずに止まる。自動モードでも止まる。これは失敗ではなく区切りであり、新しいセッションで同じ引数で実行すれば続きから再開する（steering の「セッションの区切り」）。タスクを絞って一部だけを集めるときは `$RK budget --need <見積もり>` でよい。
+`$RK budget --step Q8 --rq <RQ_NAME>` を実行する（呼び出し元の `researchkit-execute`・`researchkit-all` が直前に確かめていれば省いてよい）。`VERDICT: STOP`（終了コード 4）なら、始めずに止まる。自動モードでも止まる。これは失敗ではなく区切りであり、新しいセッションで同じ引数で実行すれば続きから再開する（steering の「セッションの区切り」）。タスクを絞って一部だけを集めるときは `$RK budget --need <見積もり>` でよい。
 
 ## 3. 出典の登録（`sources/`）
 

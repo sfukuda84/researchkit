@@ -32,8 +32,33 @@ session:
     R2: 60
     R6: 30
     Q8: 60
-    Q11: 30
+    Q11: 30                 # 5 軸レビュー 1 回目（Counter 軸）。budget --step Q11 は Q11 と Q12 の合計を見る
+    Q12: 15                 # 5 軸レビュー 2 回目
     rq: 100                 # 1 件の RQ（Q2〜Q13）の合計
+  # 手法ごとの既定の見積もり。budget --rq <RQ> は、RQ の plan.md の「検索数の見積もり」→ ここ（RQ の概要の
+  # **手法** のうち最大）→ estimates の順に使う。統計の取得（curl、estat get）は検索に数えない。
+  # 実績（003 まで、data・desk）: Q8 6〜15、Q11 8〜15、Q12 10〜13、RQ 1 件 24〜45
+  estimates_by_method:
+    data:
+      Q8: 20
+      Q11: 20
+      Q12: 15
+      rq: 50
+    desk:
+      Q8: 30
+      Q11: 20
+      Q12: 15
+      rq: 70
+    literature:
+      Q8: 60
+      Q11: 30
+      Q12: 15
+      rq: 120
+    qualitative:
+      Q8: 15
+      Q11: 20
+      Q12: 15
+      rq: 50
   stop_after_bootstrap: true  # 調査全体の工程（R12）の後は、必ずセッションを区切る
   rqs_unmetered: 1          # 回数を数えられない環境で、1 セッションに進める RQ の数
 

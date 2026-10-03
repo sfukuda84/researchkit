@@ -188,10 +188,10 @@ Web 検索には 1 セッションあたりの回数の上限がある。規則�
 
 | 場所 | コマンド | 実行するスキル |
 |---|---|---|
-| RQ に入る前（Q1 の前） | `$RK budget --step rq` | 3 スキルすべて |
-| 途中の RQ を再開する前 | 残りのステップの分（Q8 が残っていれば `--step Q8`、Q11 から先だけなら `--step Q11`、設計の工程だけなら `--step rq`） | 3 スキルすべて |
-| Q8（収集）の前 | `$RK budget --step Q8` | researchkit-execute、researchkit-all |
-| Q11（5 軸レビュー 1 回目。Counter 軸で検索する）の前 | `$RK budget --step Q11` | researchkit-execute、researchkit-all |
+| RQ に入る前（Q1 の前） | `$RK budget --step rq --rq <RQ>` | 3 スキルすべて |
+| 途中の RQ を再開する前 | 残りのステップの分（Q8 が残っていれば `--step Q8 --rq <RQ_NAME>`、Q11 から先だけなら `--step Q11 --rq <RQ_NAME>`、設計の工程だけなら `--step rq`） | 3 スキルすべて |
+| Q8（収集）の前 | `$RK budget --step Q8 --rq <RQ_NAME>` | researchkit-execute、researchkit-all |
+| Q11（5 軸レビュー 1 回目。Counter 軸で検索する）の前 | `$RK budget --step Q11 --rq <RQ_NAME>` | researchkit-execute、researchkit-all |
 | そのほか、検索の多い作業を単独で始める前 | `$RK budget --need <見積もり>` | 必要に応じて |
 
 | 結果 | すること |
